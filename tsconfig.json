@@ -10,27 +10,18 @@
   "compileOnSave": false,
 
   "compilerOptions": {
-    /* Strictness & Safety */
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-
-    /* Performance */
     "skipLibCheck": true,
     "isolatedModules": true,
-
-    /* Decorators & Helpers */
     "experimentalDecorators": true,
     "importHelpers": true,
-
-    /* Target & Module */
     "target": "ES2022",
     "module": "preserve",
-
-    /* Aliases (para SCSS e imports limpos) */
-    "baseUrl": "./src",
+    "baseUrl": "./projects/portfolio/src",
     "paths": {
       "@styles/*": ["styles/*"],
       "@app/*": ["app/*"],
@@ -49,6 +40,6 @@
 
   "references": [
     { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.spec.json" },
+    { "path": "./tsconfig.spec.json" }
   ]
 }

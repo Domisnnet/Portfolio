@@ -1,4 +1,4 @@
-import { Injectable, signal, effect, PLATFORM_ID, Inject } from '@angular/core';
+import { Injectable, signal, effect, PLATFORM_ID, inject, Renderer2, RendererFactory2 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 export type Theme = 'light' | 'dark';
@@ -7,19 +7,32 @@ export type Theme = 'light' | 'dark';
   providedIn: 'root',
 })
 export class ThemeService {
-  private isBrowser: boolean;
-  theme = signal<Theme>(this.getInitialTheme());
+  private platformId = inject(PLATFORM_ID);
+  private rendererFactory = inject(RendererFactory2);
+  private renderer: Renderer2;
+  private isBrowser = isPlatformBrowser(this.platformId);
 
-  constructor(@Inject(PLATFORM_ID) private platformId: object) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+  theme = signal<Theme>('dark'); // Start with a safe default
+
+  constructor() {
+    this.renderer = this.rendererFactory.createRenderer(null, null);
+
+    if (this.isBrowser) {
+      const initialTheme = this.getInitialTheme();
+      this.theme.set(initialTheme);
+    }
+
+    // Effect to react to theme changes
     effect(() => {
       if (this.isBrowser) {
-        localStorage.setItem('theme', this.theme());
-        if (this.theme() === 'light') {
-          document.body.classList.add('light');
+        const currentTheme = this.theme();
+        // The CSS is designed with dark as the default (no class) and light as the override class.
+        if (currentTheme === 'light') {
+          this.renderer.addClass(document.documentElement, 'light');
         } else {
-          document.body.classList.remove('light');
+          this.renderer.removeClass(document.documentElement, 'light');
         }
+        localStorage.setItem('theme', currentTheme);
       }
     });
   }
@@ -29,13 +42,16 @@ export class ThemeService {
   }
 
   private getInitialTheme(): Theme {
-    if (this.isBrowser) {
-      const storedTheme = localStorage.getItem('theme');
-      if (storedTheme === 'light' || storedTheme === 'dark') {
-        return storedTheme;
-      }
-      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    if (!this.isBrowser) {
+      return 'dark';
     }
-    return 'dark'; // Default para SSR
+    const storedTheme = localStorage.getItem('theme') as Theme | null;
+    if (storedTheme) {
+      return storedTheme;
+    }
+    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      return 'light';
+    }
+    return 'dark';
   }
 }

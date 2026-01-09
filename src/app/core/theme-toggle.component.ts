@@ -1,9 +1,11 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ThemeService } from './theme.service';
 
 @Component({
   selector: 'app-theme-toggle',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './theme-toggle.html',
   styleUrl: './theme-toggle.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

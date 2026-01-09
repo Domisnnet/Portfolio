@@ -1,1 +1,10 @@
-/* estilos globais */
+/* ====================
+    Estilos globais
+===================== */
+@use './styles/buttons';
+@use './styles/cta';
+@use './styles/hero';
+@use './styles/reset';
+@use './styles/stack';
+@use './styles/themes';
+@use './styles/variables';

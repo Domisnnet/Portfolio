@@ -1,0 +1,7 @@
+<button (click)="toggleTheme()">
+  @if (themeService.theme() === 'light') {
+    <span>☀️</span>
+  } @else {
+    <span>🌙</span>
+  }
+</button>

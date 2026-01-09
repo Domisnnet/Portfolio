@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { StackPillComponent } from '../../components/stack-pill/stack-pill.component'; // ajuste o caminho conforme sua estrutura
 
 @Component({
   selector: 'app-home',
   standalone: true, 
-  imports: [CommonModule, StackPillComponent], 
+  imports: [StackPillComponent], 
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -19,36 +19,37 @@
 </section>
 <section class="stack">
   <h2>Minha Stack Dev</h2>
-  <p class="tagline">Codificando ideias. Construindo o futuro!</p>
+  <p class="tagline">Codificando ideias. Construindo o Futuro!</p>
   <p>Desenvolvedor web em constante evolução — criativo, curioso e apaixonado por tecnologia.</p>
+
   <div class="stack-block">
     <h3>Front-end</h3>
     <div class="pill-grid">
-      <span *ngFor="let tech of stack.frontend">{{ tech }}</span>
+      <app-stack-pill *ngFor="let tech of stack.frontend" [name]="tech"></app-stack-pill>
     </div>
   </div>
   <div class="stack-block">
     <h3>Back-end</h3>
     <div class="pill-grid">
-      <span *ngFor="let tech of stack.backend">{{ tech }}</span>
+      <app-stack-pill *ngFor="let tech of stack.backend" [name]="tech"></app-stack-pill>
     </div>
   </div>
   <div class="stack-block">
     <h3>Bancos de Dados</h3>
     <div class="pill-grid">
-      <span *ngFor="let tech of stack.databases">{{ tech }}</span>
+      <app-stack-pill *ngFor="let tech of stack.databases" [name]="tech"></app-stack-pill>
     </div>
   </div>
   <div class="stack-block">
     <h3>Ferramentas & DevOps</h3>
     <div class="pill-grid">
-      <span *ngFor="let tech of stack.devops">{{ tech }}</span>
+      <app-stack-pill *ngFor="let tech of stack.devops" [name]="tech"></app-stack-pill>
     </div>
   </div>
   <div class="stack-block">
     <h3>CMS & Arquitetura</h3>
     <div class="pill-grid">
-      <span *ngFor="let tech of stack.cms">{{ tech }}</span>
+      <app-stack-pill *ngFor="let tech of stack.cms" [name]="tech"></app-stack-pill>
     </div>
   </div>
 </section>

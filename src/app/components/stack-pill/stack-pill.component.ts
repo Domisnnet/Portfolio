@@ -1,10 +1,12 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-stack-pill',
-  imports: [],
-  templateUrl: './stack-pill.html',
-  styleUrl: './stack-pill.css',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  templateUrl: './stack-pill.component.html',
+  styleUrls: ['./stack-pill.component.css']
 })
-export class StackPillComponent {}
+export class StackPillComponent {
+  @Input() name!: string;  
+  @Input() icon?: string;   
+}

@@ -7,7 +7,7 @@ This project is a modern Angular application built with standalone components, s
 
 ## Implemented Features
 
-### Initial Setup (Phase 1)
+### Phase 1: Project Cleanup and Standardization
 
 *   **Project Standardization**: Refactored the initial project structure to align with modern Angular best practices.
     *   Renamed core component files to `app.component.ts`, `app.component.html`, and `app.component.css`.
@@ -17,11 +17,17 @@ This project is a modern Angular application built with standalone components, s
 
 ## Current Plan
 
-### Phase 1: Project Cleanup and Standardization (Completed)
+### Phase 2: Component & Page Scaffolding
 
-1.  **Rename Core Files**: Rename `app.ts`, `app.html`, and `app.css` to `app.component.ts`, `app.component.html`, and `app.component.css`.
-2.  **Update Component to Standalone**: Update `AppComponent` to be a proper standalone component.
-3.  **Update `main.ts`**: Ensure the application bootstrap process correctly loads the standalone `AppComponent`.
-4.  **Update `app.routes.ts`**: Adjust the routes file to correctly reference the renamed `AppComponent`.
-5.  **Create `blueprint.md`**: Create a `blueprint.md` file to document the application's design, features, and the plan for our changes.
-6.  **Build and Verify**: Run a build to ensure all the changes are correctly implemented and the application compiles without errors.
+1.  **Generate Components and Pages**: Create the folder and file structure for the application's UI components and page-level components. (✓)
+    *   `components/header`
+    *   `components/footer`
+    *   `components/project-card`
+    *   `components/stack-pill`
+    *   `pages/home`
+    *   `pages/projects`
+    *   `pages/about`
+    *   `pages/contact`
+2.  **Update `blueprint.md`**: Add the new phase to our project blueprint. (✓)
+3.  **Apply Best Practices**: Modify each generated component to include `ChangeDetectionStrategy.OnPush`.
+4.  **Build and Verify**: Run a build to ensure all components are correctly created and there are no compilation errors.

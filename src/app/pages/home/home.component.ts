@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { StackPillComponent } from '../../components/stack-pill/stack-pill.component'; // ajuste o caminho conforme sua estrutura
+import { StackPillComponent } from '../../components/stack-pill/stack-pill.component';
 
 @Component({
   selector: 'app-home',

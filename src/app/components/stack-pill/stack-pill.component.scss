@@ -2,42 +2,53 @@
     Estilização
    ============= */
 .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    margin: 0.25rem;
-    color: #fff; // texto branco
-    font-weight: 500;
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem; 
+    padding: 0.5rem 1rem; 
+    border-radius: 25px; font-size: 0.9rem; 
+    font-weight: 500; 
+    margin: 0.25rem; 
+    color: #fff; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15); 
+    transition: all 0.2s ease-in-out;
+}
+
+.pill:hover {
+    background-color: #2b2b2b;
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .pill-icon {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
 }
 
-/* Categorias */
-.frontend .pill {
-    background: #1976d2; // azul Angular
+
+/* =================
+    Categorias
+================= */
+.frontend .pill { 
+    background: #1976d2; // Azul Material (Angular/React vibe) 
+} 
+
+.backend .pill { 
+    background: #388e3c; // Verde Material (Node.js vibe) 
+} 
+
+.databases .pill { 
+    background: #f57c00; // Laranja Material (Mongo/MySQL vibe) 
+} 
+
+.devops .pill { 
+    background: #6a1b9a; // Roxo Material (GitHub/Docker vibe) 
+} 
+
+.cms .pill { 
+    background: #d32f2f; // Vermelho Material (WordPress vibe) 
 }
 
-.backend .pill {
-    background: #388e3c; // verde Node.js
-}
-
-.databases .pill {
-    background: #f57c00; // laranja MySQL/Mongo
-}
-
-.devops .pill {
-    background: #6a1b9a; // roxo GitHub/Docker
-}
-
-.cms .pill {
-    background: #d32f2f; // vermelho WordPress
-}
 
 .pill:hover {
     opacity: 0.85;

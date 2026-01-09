@@ -1,15 +1,46 @@
+/* =============
+    Estilização
+   ============= */
 .pill {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.4rem 0.8rem;
-    border: 1px solid #ccc;
     border-radius: 20px;
-    background: #f5f5f5;
     font-size: 0.9rem;
+    margin: 0.25rem;
+    color: #fff; // texto branco
+    font-weight: 500;
 }
 
 .pill-icon {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Categorias */
+.frontend .pill {
+    background: #1976d2; // azul Angular
+}
+
+.backend .pill {
+    background: #388e3c; // verde Node.js
+}
+
+.databases .pill {
+    background: #f57c00; // laranja MySQL/Mongo
+}
+
+.devops .pill {
+    background: #6a1b9a; // roxo GitHub/Docker
+}
+
+.cms .pill {
+    background: #d32f2f; // vermelho WordPress
+}
+
+.pill:hover {
+    opacity: 0.85;
+    transform: scale(1.05);
+    transition: all 0.2s ease-in-out;
 }

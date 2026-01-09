@@ -14,24 +14,22 @@
           "style": "scss"
         }
       },
-      "root": "projects/portfolio",
-      "sourceRoot": "projects/portfolio/src",
+      "root": "",
+      "sourceRoot": "src",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "browser": "projects/portfolio/src/main.ts",
-            "tsConfig": "projects/portfolio/tsconfig.app.json",
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              {
-                "glob": "**/*",
-                "input": "projects/portfolio/public"
-              }
+              "src/assets",
+              "src/favicon.ico"
             ],
             "styles": [
-              "projects/portfolio/src/styles.scss"
+              "src/styles.scss"
             ]
           },
           "configurations": {

@@ -5,8 +5,8 @@ import { AboutPageComponent } from './pages/about/about-page.component';
 import { ContactPageComponent } from './pages/contact/contact-page.component';
 
 export const routes: Routes = [
-    { path: '', component: HomeComponent },
-    { path: 'projects', component: ProjectsPageComponent },
-    { path: 'about', component: AboutPageComponent },
-    { path: 'contact', component: ContactPageComponent },
+  { path: '', component: HomeComponent },
+  { path: 'projects', component: ProjectsPageComponent },
+  { path: 'about', component: AboutPageComponent },
+  { path: 'contact', component: ContactPageComponent },
 ];

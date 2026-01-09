@@ -8,9 +8,8 @@ describe('StackPill', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [StackPill]
-    })
-    .compileComponents();
+      imports: [StackPill],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(StackPill);
     component = fixture.componentInstance;

@@ -7,6 +7,4 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
   styleUrl: './contact-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ContactPageComponent {
-
-}
+export class ContactPageComponent {}

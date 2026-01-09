@@ -7,6 +7,4 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
   styleUrl: './stack-pill.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StackPillComponent {
-
-}
+export class StackPillComponent {}

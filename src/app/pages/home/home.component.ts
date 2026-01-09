@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent {
   stack = {
@@ -14,6 +14,6 @@ export class HomeComponent {
     backend: ['Node.js', 'Express'],
     databases: ['MongoDB', 'MySQL'],
     devops: ['GitHub', 'VSCode', 'Vercel', 'NPM'],
-    cms: ['WordPress', 'SPA moderna', 'API serverless (Node.js + Firebase Functions)']
+    cms: ['WordPress', 'SPA moderna', 'API serverless (Node.js + Firebase Functions)'],
   };
 }

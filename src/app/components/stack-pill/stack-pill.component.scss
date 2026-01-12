@@ -64,6 +64,19 @@
     mask-position: center;
 }
 
+.pill-icon-colored {
+    width: 18px;  
+    height: 18px;
+    object-fit: contain; 
+    flex-shrink: 0;     
+}
+
+.stack-pill-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 @keyframes revealPill {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }

@@ -16,7 +16,7 @@ export class ProjectsPageComponent {
       description: 'Uma loja completa com carrinho e checkout.',
       image: 'assets/images/project1.png',
       url: 'https://github.com/Domisnnet/projeto1',
-      tags: ['Angular', 'Node.js', 'MongoDB'] // Corrigido de techs para tags
+      tags: ['Angular', 'Node.js', 'MongoDB'] 
     },
     // Adicione mais objetos aqui...
   ]);

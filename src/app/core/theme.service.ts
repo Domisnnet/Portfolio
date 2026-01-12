@@ -26,9 +26,9 @@ export class ThemeService {
       if (this.isBrowser) {
         const currentTheme = this.theme();
         if (currentTheme === 'light') {
-          this.renderer.addClass(document.documentElement, 'light');
+          this.renderer.addClass(document.documentElement, 'light-theme');
         } else {
-          this.renderer.removeClass(document.documentElement, 'light');
+          this.renderer.removeClass(document.documentElement, 'light-theme');
         }
         localStorage.setItem('theme', currentTheme);
       }

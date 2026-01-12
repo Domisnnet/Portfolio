@@ -6,9 +6,8 @@
   top: 0;
   z-index: 1000;
   padding: 1rem 0;
-  // Efeito "Glassmorphism"
   backdrop-filter: blur(10px);
-  background-color: var(--header-bg);
+  background-color: var(--header-background);
   border-bottom: 1px solid var(--border-color);
   transition: background-color 0.3s, border-color 0.3s;
 }
@@ -19,7 +18,7 @@
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1.5rem; // Mais padding para telas maiores
+  padding: 0 1.5rem; 
 }
 
 /* =========================
@@ -102,7 +101,7 @@
   Botão do Menu Mobile (Hamburguer)
 ============================= */
 .menu-toggle {
-  display: none; // Escondido por padrão no desktop
+  display: none; 
   background: none;
   border: none;
   cursor: pointer;
@@ -129,13 +128,13 @@
   }
   
   .nav-links {
-    display: none; // Esconde os links no mobile
+    display: none; 
     flex-direction: column;
     position: absolute;
-    top: 70px; // Altura do header
+    top: 70px; 
     left: 0;
     right: 0;
-    background-color: var(--header-bg);
+    background-color: var(--header-background);
     padding: 1.5rem;
     border-bottom: 1px solid var(--border-color);
     align-items: flex-start;
@@ -163,6 +162,6 @@
   }
 
   .menu-toggle {
-    display: block; // Mostra o botão do menu
+    display: block; 
   }
 }

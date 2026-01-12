@@ -1,25 +1,60 @@
 /* =========================
-  Light & Dark Themes
+  Dark & Light Themes
 ========================= */
-:root,
-:root.light-theme {
+:root {
 
-/* =====================
-  Fonts
-===================== */
+  /* =====================
+    Fonts
+  ===================== */
   --font-main: 'Poppins', sans-serif;
   --font-code: 'Fira Code', monospace;
 
-/* =====================
-  Color Palette
-===================== */
+  /* =====================
+    Color Palette
+  ===================== */
   --primary-color: #4f46e5;
   --secondary-color: #4338ca;
   --accent-color: #06b6d4;
 
+  /* =====================
+    Base Colors (Dark)
+  ===================== */
+  --background-color: #111827;
+  --text-color: #f9fafb;
+  --text-color-secondary: #9ca3af;
+  --card-background: rgba(255, 255, 255, 0.05);
+  --header-background: rgba(17, 24, 39, 0.8);
+  --border-color: #374151;
+  --social-icon-color: #9ca3af;
+
+  /* ======================
+    Stack Pills (Dark)
+  ====================== */
+  --pill-frontend-text: #38bdf8;
+  --pill-frontend-background: rgba(56, 189, 248, 0.15);
+  --pill-frontend-border: rgba(56, 189, 248, 0.25);
+
+  --pill-backend-text: #818cf8;
+  --pill-backend-background: rgba(129, 140, 248, 0.15);
+  --pill-backend-border: rgba(129, 140, 248, 0.25);
+
+  --pill-database-text: #34d399;
+  --pill-database-background: rgba(52, 211, 153, 0.15);
+  --pill-database-border: rgba(52, 211, 153, 0.25);
+
+  --pill-devops-text: #9ca3af;
+  --pill-devops-background: rgba(156, 163, 175, 0.15);
+  --pill-devops-border: rgba(156, 163, 175, 0.25);
+
+  --pill-cms-text: #f472b6;
+  --pill-cms-background: rgba(244, 114, 182, 0.15);
+  --pill-cms-border: rgba(244, 114, 182, 0.25);
+}
+
 /* =====================
-  Base Theme (Light)
-===================== */
+  Light Theme (Override)
+  ===================== */
+.light-theme {
   --background-color: #ffffff;
   --text-color: #1f2937;
   --text-color-secondary: #6b7280;
@@ -50,35 +85,4 @@
   --pill-cms-text: #db2777;
   --pill-cms-background: rgba(219, 39, 119, 0.1);
   --pill-cms-border: rgba(219, 39, 119, 0.2);
-}
-
-/* =====================
-  Base Theme (Dark)
-===================== */
-.dark-theme {
-  --background-color: #111827;
-  --text-color: #f9fafb;
-  --text-color-secondary: #9ca3af;
-  --card-background: rgba(255, 255, 255, 0.05);
-  --header-background: rgba(17, 24, 39, 0.8);
-  --border-color: #374151;
-  --social-icon-color: #9ca3af;
-
-/* ======================
-  Stack Pills (Dark)
-====================== */
-  --pill-frontend-text: #38bdf8;
-  --pill-frontend-background: rgba(56, 189, 248, 0.15);
-
-  --pill-backend-text: #818cf8;
-  --pill-backend-background: rgba(129, 140, 248, 0.15);
-
-  --pill-database-text: #34d399;
-  --pill-database-background: rgba(52, 211, 153, 0.15);
-
-  --pill-devops-text: #9ca3af;
-  --pill-devops-background: rgba(156, 163, 175, 0.15);
-
-  --pill-cms-text: #f472b6;
-  --pill-cms-background: rgba(244, 114, 182, 0.15);
 }

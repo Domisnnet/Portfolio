@@ -1,25 +1,29 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Project } from '../../core/models/project.model';
 
 @Component({
   selector: 'app-project-card',
-  standalone: true,
+  standalone: true, 
+  imports: [CommonModule],
   templateUrl: './project-card.component.html',
   styleUrls: ['./project-card.component.scss'],
-  host: {
-    '[style.--rotation]': 'rotation()'
-  }
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectCardComponent {
-  project = input.required<any>();
+  project = input.required<Project>();
   index = input.required<number>();
+  isFlipped = signal(false);
 
-  // Gera uma rotação única para cada foto parecer "jogada" na mesa
-  rotation = () => {
-    const angles = [-4, 2, -2, 5, -3, 3];
-    return angles[this.index() % angles.length] + 'deg';
-  };
+  toggleFlip() {
+    this.isFlipped.update(value => !value);
+  }
 
-  openLink() {
-    window.open(this.project().url, '_blank');
+  openLink(event: Event) {
+    event.stopPropagation(); 
+    const link = this.project()?.link;
+    if (link) {
+      window.open(link, '_blank');
+    }
   }
 }

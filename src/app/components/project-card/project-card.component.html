@@ -1,14 +1,25 @@
-<article class="project-card" (click)="openLink()">
-  <div class="card-image-container">
-    <img [src]="project().image" [alt]="'Screenshot do projeto ' + project().name" class="card-image">
+<div class="flip-container" [class.flipped]="isFlipped()" (click)="toggleFlip()">
+  <div class="flipper">
+    <div class="front">
+      <div class="card-image-container">
+        <img [src]="project().image" [alt]="project().title">
+      </div>
+      <h3>{{ project().title }}</h3>
+    </div>
+    <div class="back">
+      <h4 class="back-title">Tecnologias</h4>
+      <div class="stack-pills">
+        @for (tag of project().tags; track tag) {
+          <span class="pill" [ngClass]="tag.toLowerCase().split(' ').join('-').replace('.', '-')">
+            <img [src]="'assets/icons/' + tag.toLowerCase().split(' ').join('-').replace('.', '-') + '.svg'" 
+                 (error)="$event.target.style.display='none'"
+                 class="pill-icon">
+            {{ tag }}
+          </span>
+        }
+      </div>
+      <p class="description">{{ project().description }}</p>
+      <button class="btn-visit" (click)="openLink($event)">Ver Projeto</button>
+    </div>
   </div>
-  <div class="card-content">
-    <h3 class="card-title">{{ project().name }}</h3>
-    <p class="card-description">{{ project().description }}</p>
-    <footer class="card-footer">
-      @for (tech of project().tags; track tech) {
-        <span class="card-tag">{{ tech }}</span>
-      }
-    </footer>
-  </div>
-</article>
+</div>

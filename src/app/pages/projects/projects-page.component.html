@@ -1,12 +1,17 @@
-<div class="projects-container">
-  <header class="projects-header">
+<section class="projects-container">
+  <header class="page-header">
     <h1>Meus Trabalhos</h1>
     <p>Uma galeria de soluções capturadas em código.</p>
   </header>
-  <main class="photo-deck">
-    @for (item of projects(); track item.name; let i = $index) {
-    <app-project-card [project]="item" [index]="i">
+
+  <div class="projects-grid">
+    @for (project of projects(); track project.title; let i = $index) {
+      <app-project-card 
+        [project]="project" 
+        [index]="i"
+        [style.--rotation]="(i % 2 === 0 ? '2deg' : '-2deg')"
+      >
     </app-project-card>
     }
-  </main>
-</div>
+  </div>
+</section>

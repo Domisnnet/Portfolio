@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StackPillComponent } from '../../components/stack-pill/stack-pill.component';
+import { HeroComponent } from '../../components/hero/hero';
 
 @Component({
   selector: 'app-home',
-  standalone: true,
-  imports: [CommonModule, StackPillComponent], 
+  imports: [CommonModule, StackPillComponent, HeroComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ThemeToggleComponent } from '../../core/theme-toggle.component';
 
@@ -10,4 +10,10 @@ import { ThemeToggleComponent } from '../../core/theme-toggle.component';
   styleUrl: './header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HeaderComponent {}
+export class HeaderComponent {
+  isMenuOpen = signal(false);
+
+  toggleMenu() {
+    this.isMenuOpen.set(!this.isMenuOpen());
+  }
+}

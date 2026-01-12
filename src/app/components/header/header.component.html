@@ -1,13 +1,26 @@
 <header class="main-header">
-    <nav class="nav-container">
-        <div class="logo">
-            <span class="logo-dot"></span> DomisDev
-        </div>
-        <ul class="nav-links">
+  <nav class="nav-container">
+    <div class="logo">
+      <a routerLink="/">
+        <span class="logo-dot"></span> DomisDev
+      </a>
+    </div>
+
+    <div class="nav-items">
+        <ul class="nav-links" [class.mobile-active]="isMenuOpen()">
             <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
             <li><a routerLink="/projects" routerLinkActive="active">Projetos</a></li>
             <li><a href="#contato" class="btn-contact">Contato</a></li>
+            <li><app-theme-toggle></app-theme-toggle></li>
         </ul>
-        <app-theme-toggle></app-theme-toggle>
-    </nav>
+    </div>
+
+    <button class="menu-toggle" (click)="toggleMenu()">
+      @if (isMenuOpen()) {
+        <span class="icon-close">&times;</span>
+      } @else {
+        <span class="icon-menu">&#9776;</span>
+      }
+    </button>
+  </nav>
 </header>

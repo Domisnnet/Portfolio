@@ -1,36 +1,168 @@
+/* =========================
+  Header - Estilos Gerais
+========================= */
 .main-header {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    backdrop-filter: blur(10px);
-    background: rgba(var(--surface-rgb), 0.8);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  padding: 1rem 0;
+  // Efeito "Glassmorphism"
+  backdrop-filter: blur(10px);
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.3s, border-color 0.3s;
+}
 
-    .nav-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 20px;
+.nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem; // Mais padding para telas maiores
+}
+
+/* =========================
+  Logo
+========================= */
+.logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 1002;
+
+  a {
+    text-decoration: none;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .logo-dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+  }
+}
+
+/* =========================
+  Links de Navegação (Desktop)
+========================= */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+  }
+
+  a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    transition: color 0.3s;
+    padding-bottom: 0.25rem;
+
+    &:hover {
+      color: var(--primary-color);
     }
 
-    .nav-links {
-        display: flex;
-        gap: 30px;
-        list-style: none;
-
-        a {
-            text-decoration: none;
-            color: var(--text-color);
-            font-weight: 500;
-            transition: color 0.3s;
-
-            &.active {
-                color: var(--accent);
-                border-bottom: 2px solid var(--accent);
-            }
-        }
+    &.active {
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--primary-color);
     }
+  }
+
+  .btn-contact {
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: var(--secondary-color);
+      color: #fff;
+    }
+
+    &.active {
+      border: none;
+    }
+  }
+}
+
+/* =============================
+  Botão do Menu Mobile (Hamburguer)
+============================= */
+.menu-toggle {
+  display: none; // Escondido por padrão no desktop
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+
+  .icon-menu, .icon-close {
+    font-size: 2rem;
+    color: var(--text-color);
+  }
+
+  .icon-close {
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+}
+
+/* =========================
+  Responsividade
+========================= */
+@media (max-width: 768px) {
+  .nav-items {
+    display: none;
+  }
+  
+  .nav-links {
+    display: none; // Esconde os links no mobile
+    flex-direction: column;
+    position: absolute;
+    top: 70px; // Altura do header
+    left: 0;
+    right: 0;
+    background-color: var(--header-bg);
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    align-items: flex-start;
+    gap: 1.5rem;
+
+    &.mobile-active {
+      display: flex;
+    }
+
+    a {
+      padding-bottom: 0;
+      border-bottom: none;
+
+      &.active {
+        border-bottom: none;
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+    }
+    
+    .btn-contact {
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  .menu-toggle {
+    display: block; // Mostra o botão do menu
+  }
 }

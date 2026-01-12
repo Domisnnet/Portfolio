@@ -4,11 +4,68 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap');
 
 :root {
-    --font-main: 'Poppins', sans-serif;
-    --font-code: 'Fira Code', monospace;
-    --primary-color: #4f46e5;
-    --secondary-color: #4338ca;
-    --accent-color: #06b6d4;
-    --bg-color: #111827;
-    --text-color: #f9fafb;
+/* ================
+  Fontes
+================= */
+  --font-main: 'Poppins', sans-serif;
+  --font-code: 'Fira Code', monospace;
+
+/* ================
+  Material Color
+================= */
+  --primary-color: #4f46e5;
+  --secondary-color: #4338ca;
+  --accent-color: #06b6d4;
+
+/* ================
+  Tema Base (Dark)
+================= */
+  --bg-color: #111827;
+  --text-color: #f9fafb;
+  --card-bg: rgba(255, 255, 255, 0.05);
+
+/* ================
+  Tema Base (Light)
+================= */  
+  --bg-color: #ffffff;
+  --text-color: #1f2937;
+  --card-bg: #f3f4f6;
+
+  /* ======================
+  Categorias Stack pills
+========================= */  
+  --pill-front-text: #0284c7; // Frontend (Azul/Cyan)
+  --pill-front-bg: rgba(6, 182, 212, 0.1);
+  --pill-front-border: rgba(6, 182, 212, 0.2);
+  --pill-back-text: #4f46e5; // Backend (Indigo/Roxo)
+  --pill-back-bg: rgba(79, 70, 229, 0.1);
+  --pill-back-border: rgba(79, 70, 229, 0.2);
+  --pill-db-text: #059669; // Database (Verde)
+  --pill-db-bg: rgba(16, 185, 129, 0.1);
+  --pill-db-border: rgba(16, 185, 129, 0.2);
+  --pill-devops-text: #4b5563; // DevOps/Tools (Cinza/Dark)
+  --pill-devops-bg: rgba(107, 114, 128, 0.1);
+  --pill-devops-border: rgba(107, 114, 128, 0.2);
+}
+
+/* =========================
+  Ajustes para Tema Dark
+========================= */  
+[data-theme='dark'] {
+  --bg-color: #111827;
+  --text-color: #f9fafb;
+  --card-bg: rgba(255, 255, 255, 0.05);
+
+  /* Cores das Pills no Dark (Mais brilho/Contraste) */
+  --pill-front-text: #38bdf8;
+  --pill-front-bg: rgba(56, 189, 248, 0.15);
+
+  --pill-back-text: #818cf8;
+  --pill-back-bg: rgba(129, 140, 248, 0.15);
+
+  --pill-db-text: #34d399;
+  --pill-db-bg: rgba(52, 211, 153, 0.15);
+
+  --pill-devops-text: #9ca3af;
+  --pill-devops-bg: rgba(156, 163, 175, 0.15);
 }

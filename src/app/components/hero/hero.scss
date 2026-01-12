@@ -4,7 +4,7 @@
 .hero-section {
   padding: 6rem 0;
   background-color: var(--background-color);
-  overflow: hidden; // Para garantir que as formas animadas não causem overflow
+  overflow: hidden; 
 }
 
 .hero-container {
@@ -60,7 +60,7 @@
   Visual Abstrato e Animação
 ========================= */
 .hero-visual {
-  display: none; // Escondido em telas menores por padrão
+  display: none; 
   position: relative;
   height: 300px;
   justify-content: center;
@@ -119,7 +119,7 @@
 ========================= */
 @media (min-width: 992px) {
   .hero-container {
-    grid-template-columns: 1fr 1fr; // Duas colunas em telas maiores
+    grid-template-columns: 1fr 1fr; 
   }
 
   .hero-text {
@@ -131,6 +131,6 @@
   }
 
   .hero-visual {
-    display: flex; // Mostra o visual em telas maiores
+    display: flex; 
   }
 }

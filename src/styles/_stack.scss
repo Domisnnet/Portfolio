@@ -2,17 +2,17 @@
   Stack pills
 ================= */
 .stack-pill {
-    display: inline-block;
-    padding: 0.4rem 0.8rem;
-    margin: 0.3rem;
-    border-radius: 20px;
-    background: var(--secondary-color);
-    color: #fff;
-    font-family: var(--font-code);
-    font-size: 0.9rem;
-    transition: background 0.3s ease;
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  margin: 0.3rem;
+  border-radius: 20px;
+  background: var(--secondary-color);
+  color: #fff;
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+  transition: background 0.3s ease;
 }
 
 .stack-pill:hover {
-    background: var(--accent-color);
+  background: var(--accent-color);
 }

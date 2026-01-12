@@ -9,4 +9,5 @@ export const routes: Routes = [
   { path: 'projetos', component: ProjectsPageComponent },
   { path: 'sobre', component: AboutPageComponent },
   { path: 'contato', component: ContactPageComponent },
+  { path: '**', redirectTo: '' },
 ];

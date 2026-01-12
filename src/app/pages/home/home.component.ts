@@ -50,7 +50,7 @@ export class HomeComponent {
       'React': 'assets/icons/react.svg',
       'Sass': 'assets/icons/sass.svg',
       'SPA moderna': 'assets/icons/spa.svg',
-      'Tailwind.CSS': 'assets/icons/tailwind.svg',
+      'Tailwind.CSS': 'assets/icons/tailwind-css.svg',
       'Vercel': 'assets/icons/vercel.svg',
       'VSCode': 'assets/icons/vscode.svg',
       'Vue.js': 'assets/icons/vue-js.svg',

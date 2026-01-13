@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -10,5 +10,11 @@ import { CommonModule } from '@angular/common';
 })
 export class StackPillComponent {
   @Input() label!: string;
+  @Input() iconPath!: string;
   @Input() category!: 'frontend' | 'backend' | 'databases' | 'devops' | 'cms';
+
+  @HostBinding('class')
+  get hostClass(): string {
+    return this.category;
+  }
 }

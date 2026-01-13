@@ -1,6 +1,9 @@
 <div class="stack-pill-inner">
-  @if (iconPath()) {
-    <img [src]="iconPath()" [alt]="name()" class="stack-pill-logo" />
-  }
-  <span class="stack-pill-text">{{ name() }}</span>
+  <img
+    *ngIf="iconPath"
+    [src]="iconPath"
+    [alt]="label"
+    class="stack-pill-logo"
+  />
+  <span class="stack-pill-text">{{ label }}</span>
 </div>

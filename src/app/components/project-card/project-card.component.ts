@@ -1,4 +1,6 @@
 import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { StackPillComponent } from '../stack-pill/stack-pill.component';
 
 type PillCategory =
   | 'frontend'
@@ -89,6 +91,8 @@ const TAG_CONFIG: Record<string, StackPillData> = {
 
 @Component({
   selector: 'app-project-card',
+  standalone: true,
+  imports: [CommonModule, StackPillComponent],
   templateUrl: './project-card.component.html',
   styleUrls: ['./project-card.component.scss'],
 })

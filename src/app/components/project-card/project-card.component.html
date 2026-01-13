@@ -20,14 +20,13 @@
       </div>
       <!-- STACK PILLS -->
       <div class="artifact-stack">
-        @for (tag of project.tags; track tag) {
-          @const pill = resolvePill(tag);
+        <ng-container *ngFor="let tag of project.tags">
           <app-stack-pill
-            [label]="pill.label"
-            [iconPath]="pill.iconPath"
-            [category]="pill.category"
-          />
-        }
+            [label]="resolvePill(tag).label"
+            [iconPath]="resolvePill(tag).iconPath"
+            [category]="resolvePill(tag).category"
+          ></app-stack-pill>
+        </ng-container>
       </div>
       <!-- ACTION -->
       <div class="artifact-action">

@@ -97,6 +97,7 @@ const TAG_CONFIG: Record<string, StackPillData> = {
   styleUrls: ['./project-card.component.scss'],
 })
 export class ProjectCardComponent {
+  @Input() index?: number;
   @Input() project!: {
     title: string;
     description: string;

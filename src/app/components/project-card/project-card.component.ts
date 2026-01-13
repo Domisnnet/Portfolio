@@ -9,21 +9,26 @@ import { StackPillComponent } from '../stack-pill/stack-pill.component';
   templateUrl: './project-card.component.html',
   styleUrls: ['./project-card.component.scss']
 })
+
 export class ProjectCardComponent {
   @Input() project!: any;
-  @Input() index?: number;
+  @Input({ required: true }) index!: number;
   isFlipped = signal(false);
   toggleFlip() {
     this.isFlipped.update(v => !v);
   }
-  mapTag(tag: string) {
-    const map: Record<string, string> = {
-      'Angular': 'frontend',
-      'Vue.js': 'frontend',
-      'JavaScript': 'frontend',
-      'Node.js': 'backend',
-      'Firebase': 'backend'
-    };
-    return map[tag] ?? 'frontend';
+  mapTag(tag: string): 'frontend' | 'backend' {
+  const map: Record<string, 'frontend' | 'backend'> = {
+    'Angular': 'frontend',
+    'Vue.js': 'frontend',
+    'JavaScript': 'frontend',
+    'HTML5': 'frontend',
+    'CSS3': 'frontend',
+    'Tailwind.CSS': 'frontend',
+    'Node.js': 'backend',
+    'Firebase': 'backend'
+  };
+
+  return map[tag] ?? 'frontend';
   }
 }

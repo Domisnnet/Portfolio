@@ -1,33 +1,44 @@
-<article class="artifact-card" [class.is-flipped]="isFlipped()">
+<article
+  class="artifact-card"
+  [style.--index]="index"
+  [class.is-flipped]="isFlipped()"
+  (mouseenter)="isFlipped.set(true)"
+  (mouseleave)="isFlipped.set(false)"
+>
   <div class="artifact-inner">
-    <!-- FACE A — POLAROID -->
-    <section class="artifact-face artifact-front" (click)="toggleFlip()">
+    <!-- FRONT -->
+    <section class="artifact-face artifact-front">
       <div class="artifact-photo">
-        <img class="artifact-image" [src]="project().image" [alt]="project().title" loading="lazy" draggable="false" />
+        <img
+          class="artifact-image"
+          [src]="project.image"
+          [alt]="project.title"
+        />
       </div>
     </section>
-    <!-- FACE B — CONTEÚDO -->
+    <!-- BACK -->
     <section class="artifact-face artifact-back">
       <header class="artifact-header">
-        <h3>{{ project().title }}</h3>
-        <p>{{ project().description }}</p>
+        <h3>{{ project.title }}</h3>
+        <p>{{ project.description }}</p>
       </header>
       <div class="artifact-stack">
-        @for (tag of project().tags; track tag; let i = $index) {
-        <app-stack-pill 
-          [ngClass]="mapTag(tag)" 
-          [style.--delay]="i"
-        >
-          {{ tag }}
-        </app-stack-pill>
-        }
+        <app-stack-pill
+          *ngFor="let tag of project.tags"
+          [label]="tag"
+          [type]="mapTag(tag)"
+        />
       </div>
-      <footer class="artifact-action">
-        <a class="artifact-button" [href]="project().link" target="_blank" rel="noopener noreferrer"
-          (click)="$event.stopPropagation()">
+      <div class="artifact-action">
+        <a
+          class="artifact-button"
+          [href]="project.link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Ver Projeto
         </a>
-      </footer>
+      </div>
     </section>
   </div>
 </article>

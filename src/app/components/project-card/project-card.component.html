@@ -1,34 +1,46 @@
-<div class="project-card">
-  <div class="card-inner" [class.flipped]="flipped">
-    <!-- FRENTE -->
-    <div class="card-face card-front">
-      <img
-        class="project-image"
-        [src]="project.image"
-        [alt]="project.title"
-        loading="lazy"
-      />
-      <h3>{{ project.title }}</h3>
-      <p>{{ project.description }}</p>
-      <div class="actions">
-        <a [href]="project.link" target="_blank">Ver projeto</a>
-        <button (click)="toggle()">Stack</button>
+<div
+  class="artifact-card"
+  [class.is-flipped]="isFlipped"
+  (click)="toggleFlip()"
+>
+  <div class="artifact-inner">
+    <div class="artifact-face artifact-front">
+      <div class="artifact-photo">
+        <img
+          class="artifact-image"
+          [src]="project.image"
+          [alt]="project.title"
+        />
       </div>
     </div>
-    <!-- VERSO -->
-    <div class="card-face card-back">
-      <h4>Tecnologias</h4>
-      <div class="stack-wrapper">
-        @for (tag of project.tags; track tag; let i = $index) {
+    <div class="artifact-face artifact-back">
+      <div class="artifact-header">
+        <h3>{{ project.title }}</h3>
+        <p>{{ project.description }}</p>
+      </div>
+      <!-- STACK PILLS -->
+      <div class="artifact-stack">
+        @for (tag of project.tags; track tag) {
+          @const pill = resolvePill(tag);
           <app-stack-pill
-            [label]="tag"
-            [iconPath]="getIcon(tag)"
-            category="frontend"
-            [style.--delay]="i">
-          </app-stack-pill>
+            [label]="pill.label"
+            [iconPath]="pill.iconPath"
+            [category]="pill.category"
+          />
         }
       </div>
-      <button class="back-btn" (click)="toggle()">Voltar</button>
+      <!-- ACTION -->
+      <div class="artifact-action">
+        <a
+          *ngIf="project.link"
+          class="artifact-button"
+          [href]="project.link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Ver projeto
+        </a>
+      </div>
     </div>
   </div>
 </div>

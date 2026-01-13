@@ -1,19 +1,10 @@
-<article
-  class="artifact-card"
-  [style.--index]="index"
-  [class.is-flipped]="isFlipped()"
-  (mouseenter)="isFlipped.set(true)"
-  (mouseleave)="isFlipped.set(false)"
->
+<article class="artifact-card" [style.--index]="index" [class.is-flipped]="isFlipped()"
+  (mouseenter)="isFlipped.set(true)" (mouseleave)="isFlipped.set(false)">
   <div class="artifact-inner">
     <!-- FRONT -->
     <section class="artifact-face artifact-front">
       <div class="artifact-photo">
-        <img
-          class="artifact-image"
-          [src]="project.image"
-          [alt]="project.title"
-        />
+        <img class="artifact-image" [src]="project.image" [alt]="project.title" />
       </div>
     </section>
     <!-- BACK -->
@@ -23,21 +14,12 @@
         <p>{{ project.description }}</p>
       </header>
       <div class="artifact-stack">
-        <app-stack-pill
-          *ngFor="let tag of project.tags"  
-          [label]="tag"
-          [category]="mapTag(tag)"
-        />
+        <app-stack-pill *ngFor="let tag of project.tags" [label]="tag" [category]="mapTag(tag)" />
       </div>
       <div class="artifact-action">
-        <a
-          class="artifact-button"
-          [href]="project.link"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a class="artifact-button" [href]="project.link" target="_blank" rel="noopener noreferrer">
           Ver Projeto
-        </a>  
+        </a>
       </div>
     </section>
   </div>

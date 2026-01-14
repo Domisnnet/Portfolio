@@ -12,36 +12,40 @@
   animation: revealPill 0.5s ease forwards;
   animation-delay: calc(var(--delay, 0) * 0.1s);
 
-  // Seletores de Categoria com Fallback (caso a variável não exista)
-  &.frontend {
+  
+  /* =========================
+    Seletores por Categoria
+  ========================== */  
+  &[data-category="frontend"] {
     color: var(--pill-frontend-text, #61dafb);
     background: var(--pill-frontend-background, rgba(97, 218, 251, 0.1));
     border-color: var(--pill-frontend-border, rgba(97, 218, 251, 0.2));
   }
-  &.backend {
+  &[data-category="backend"] {
     color: var(--pill-backend-text, #3c873a);
     background: var(--pill-backend-background, rgba(60, 135, 58, 0.1));
     border-color: var(--pill-backend-border, rgba(60, 135, 58, 0.2));
   }
-  &.databases {
+  &[data-category="databases"] {
     color: var(--pill-database-text, #47a248);
     background: var(--pill-database-background, rgba(71, 162, 72, 0.1));
     border-color: var(--pill-database-border, rgba(71, 162, 72, 0.2));
   }
-  &.devops {
+  &[data-category="devops"] {
     color: var(--pill-devops-text, #2496ed);
     background: var(--pill-devops-background, rgba(36, 150, 237, 0.1));
     border-color: var(--pill-devops-border, rgba(36, 150, 237, 0.2));
   }
-  &.cms {
+  &[data-category="cms"] {
     color: var(--pill-cms-text, #d54e21);
     background: var(--pill-cms-background, rgba(213, 78, 33, 0.1));
     border-color: var(--pill-cms-border, rgba(213, 78, 33, 0.2));
   }
 
   &:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 8px 20px -5px currentColor;
+    /* More pronounced "lift" and a more "loaded" shadow */
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 4px 5px 18px -4px currentColor;
   }
 }
 

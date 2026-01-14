@@ -1,39 +1,44 @@
 <div
   class="artifact-card"
-  [class.is-flipped]="isFlipped"
+  [class.is-flipped]="isFlipped()"
   (click)="toggleFlip()"
 >
   <div class="artifact-inner">
+    <!-- FRONT -->
     <div class="artifact-face artifact-front">
       <div class="artifact-photo">
         <img
           class="artifact-image"
-          [src]="project.image"
-          [alt]="project.title"
+          [src]="project().image"
+          [alt]="project().title"
         />
       </div>
     </div>
+
+    <!-- BACK -->
     <div class="artifact-face artifact-back">
       <div class="artifact-header">
-        <h3>{{ project.title }}</h3>
-        <p>{{ project.description }}</p>
+        <h3>{{ project().title }}</h3>
+        <p>{{ project().description }}</p>
       </div>
+
       <!-- STACK PILLS -->
       <div class="artifact-stack">
-        @for (tag of project.tags; track tag) {
+        @for (pill of sortedPills(); track pill.label) {
           <app-stack-pill
-            [label]="resolvePill(tag).label"
-            [iconPath]="resolvePill(tag).iconPath"
-            [category]="resolvePill(tag).category"
-          ></app-stack-pill>
+            [label]="pill.label"
+            [iconPath]="pill.iconPath"
+            [category]="pill.category"
+          />
         }
       </div>
+
       <!-- ACTION -->
       <div class="artifact-action">
-        @if (project.link) {
+        @if (project().link) {
           <a
             class="artifact-button"
-            [href]="project.link"
+            [href]="project().link"
             target="_blank"
             rel="noopener noreferrer"
           >

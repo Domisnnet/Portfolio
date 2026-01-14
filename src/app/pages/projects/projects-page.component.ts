@@ -72,7 +72,7 @@ export class ProjectsPageComponent {
       title: 'Interactive Portfolio',
       description: 'Portfólio animado com narrativa visual e microinterações.',
       image: 'assets/images/portfolio.png',
-      tags: ['Angular', 'SCSS', 'Animation', 'Design'],
+      tags: ['Angular', 'SCSS', 'Motions', 'Design'],
       link: 'https://portfolio-56747762-94d87.web.app/',
     },
   ]);

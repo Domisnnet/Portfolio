@@ -18,3 +18,11 @@
 .hero .avatar:hover {
   transform: scale(1.05);
 }
+
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+}

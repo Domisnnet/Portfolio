@@ -2,11 +2,10 @@
   CONTAINER GERAL
 ========================= */
 .projects-container {
-  width: 100%;
-  max-width: 1400px;
+  position: relative;
+  min-height: 100vh; 
   margin: 0 auto;
-  padding: 80px 24px 120px;
-  background-color: transparent; // Integração com o background cósmico
+  padding: 40px 24px 120px;
   position: relative;
   z-index: 1;
 }

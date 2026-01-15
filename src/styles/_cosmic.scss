@@ -16,6 +16,10 @@
     isolation: isolate;
 }
 
+.cosmic-section::before {
+    z-index: -1; 
+}
+
 /* =======================
     CAMADA ATMOSFÉRICA 
 ======================= */

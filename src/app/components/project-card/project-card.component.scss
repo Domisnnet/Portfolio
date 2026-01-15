@@ -126,6 +126,10 @@
 /* =========================
   HEADER
 ========================= */
+.artifact-header {
+  margin-bottom: 16px;
+}
+
 .artifact-header h3 {
   font-size: 1rem;
   font-weight: 700;
@@ -146,7 +150,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
+  margin-bottom: 20px;
 }
 
 /* =========================

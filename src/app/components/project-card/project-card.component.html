@@ -1,17 +1,9 @@
-<div
-  class="artifact-card"
-  [class.is-flipped]="isFlipped()"
-  (click)="toggleFlip()"
-  [attr.data-categories]="categories().join(' ')"
->
+<div class="artifact-card" [class.is-flipped]="isFlipped()" (click)="toggleFlip()"
+  [attr.data-categories]="categories().join(' ')">
   <div class="artifact-inner">
     <div class="artifact-face artifact-front">
       <div class="artifact-photo">
-        <img
-          [src]="project().image"
-          [alt]="project().title"
-          loading="lazy"
-        />
+        <img [src]="project().image" [alt]="project().title" loading="lazy" />
       </div>
     </div>
     <div class="artifact-face artifact-back">
@@ -20,26 +12,18 @@
         <p>{{ project().description }}</p>
       </div>
       <!-- STACK PILLS -->
-      <div class="artifact-stack">
-        @for (tag of visibleTags(); track tag) {
-          <app-stack-pill
-            [label]="TAG_CONFIG[tag].label"
-            [iconPath]="TAG_CONFIG[tag].iconPath"
-            [category]="TAG_CONFIG[tag].category"
-          />
+      <div class="pill-grid">
+        @for (pill of pills(); track pill.key; let i = $index) {
+        <app-stack-pill [label]="pill.label" [iconPath]="pill.iconPath" [category]="pill.category"
+          [style.--delay]="i" />
         }
       </div>
       <!-- ACTION -->
       <div class="artifact-action">
         @if (project().link) {
-          <a
-            class="artifact-button"
-            [href]="project().link"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Ver projeto
-          </a>
+        <a class="artifact-button" [href]="project().link" target="_blank" rel="noopener noreferrer">
+          Ver projeto
+        </a>
         }
       </div>
     </div>

@@ -72,8 +72,8 @@ export const STACK_CONFIG = {
 
   /* CMS */
   wordpress: pill('WordPress', 'wordpress', 'cms'),
-  spamoderna: pill('Spamoderna', 'spamoderna', 'cms'),
-  apiserverless: pill('API Serverless', 'api-serverless (Node.Js + Firebase Functions)', 'cms'),
+  spamoderna: pill('SPA Moderna', 'spa-moderna', 'cms'),
+  apiserverless: pill('API Serverless (Node.Js + Firebase Functions)', 'api-serverless', 'cms'),
 
   /* CONCEITUAL */
   design: pill('Design', 'design', 'frontend'),

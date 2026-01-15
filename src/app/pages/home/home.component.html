@@ -14,12 +14,11 @@
   <div class="container no-padding-top">
     <h2>Minha Stack Dev</h2>
     <p class="tagline">Codificando ideias. Construindo o Futuro!</p>
-    <p class="tagline">Desenvolvedor web em constante evolução — criativo, curioso e apaixonado por tecnologia.</p>
     @for (category of categories; track category) {
     <div class="stack-block" [class]="category">
       <h3>{{ category | titlecase }}</h3>
       <div class="pill-grid">
-        @for (pill of getStack(category); track pill.key; let i = $index) {
+        @for (pill of stackService.getStack(category); track pill.key; let i = $index) {
         <app-stack-pill 
           [label]="pill.label" 
           [iconPath]="pill.iconPath" 

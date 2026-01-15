@@ -12,7 +12,7 @@
         <p>{{ project().description }}</p>
       </div>
       <!-- STACK PILLS -->
-      <div class="pill-grid">
+      <div class="artifact-stack">
         @for (pill of pills(); track pill.key; let i = $index) {
         <app-stack-pill [label]="pill.label" [iconPath]="pill.iconPath" [category]="pill.category"
           [style.--delay]="i" />

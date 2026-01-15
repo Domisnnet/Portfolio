@@ -19,6 +19,9 @@ interface ResolvedPill extends StackPillData {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectCardComponent {
+  /* =========================
+    INPUTS
+  ========================= */
   index = input<number>(0);
 
   project = input.required<{
@@ -32,17 +35,17 @@ export class ProjectCardComponent {
   /* =========================
     FLIP STATE
   ========================= */
-  private readonly flipped = signal(false);
-  readonly isFlipped = this.flipped.asReadonly();
+  private flipped = signal(false);
+  isFlipped = this.flipped.asReadonly();
 
   toggleFlip(): void {
     this.flipped.update(v => !v);
   }
 
   /* =========================
-  PILLS RESOLVIDAS 
+    STACK PILLS (ORDERED)
   ========================= */
-  readonly pills = computed<ResolvedPill[]>(() => {
+  pills = computed(() => {
     const order: Record<PillCategory, number> = {
       frontend: 1,
       backend: 2,
@@ -57,17 +60,28 @@ export class ProjectCardComponent {
         key,
         ...STACK_CONFIG[key],
       }))
-      .sort(
-        (a, b) => order[a.category] - order[b.category]
-      );
+      .sort((a, b) => {
+        const categoryDiff =
+          order[a.category] - order[b.category];
+
+        if (categoryDiff !== 0) {
+          return categoryDiff;
+        }
+
+        return a.label.localeCompare(b.label);
+      });
   });
 
   /* =========================
     CATEGORIES (GLOW ENGINE)
   ========================= */
-  readonly categories = computed<PillCategory[]>(() => {
-    return Array.from(
-      new Set(this.pills().map(p => p.category))
-    );
+  categories = computed<PillCategory[]>(() => {
+    const set = new Set<PillCategory>();
+
+    for (const pill of this.pills()) {
+      set.add(pill.category);
+    }
+
+    return Array.from(set);
   });
 }

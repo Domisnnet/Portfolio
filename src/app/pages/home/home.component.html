@@ -1,64 +1,102 @@
 <section class="hero">
-  <img src="/assets/images/domisdev.png" alt="Avatar de DomisDev" width="150" height="150" class="avatar" />
+  <img
+    src="/assets/images/domisdev.png"
+    alt="Avatar de DomisDev"
+    width="150"
+    height="150"
+    class="avatar"
+  />
   <div>
-    <h2>Olá, eu sou o DomisDev — Dev front end</h2>
+    <h2>Olá, eu sou o DomisDev — Dev front-end</h2>
     <p>
-      Estudando para ser um futuro Full Stack e explorando tecnologias modernas para criar
-      experiências digitais únicas.
+      Estudando para ser um futuro Full Stack e explorando tecnologias modernas
+      para criar experiências digitais únicas.
     </p>
     <div class="cta">
-      <a class="btn" href="assets/cv.pdf" download> 📄 Baixar CV </a>
-      <a class="btn outline" href="https://github.com/Domisnnet" target="_blank"> 🐙 GitHub </a>
+      <a class="btn" href="assets/cv.pdf" download>📄 Baixar CV</a>
+      <a
+        class="btn outline"
+        href="https://github.com/Domisnnet"
+        target="_blank"
+        rel="noopener"
+      >
+        🐙 GitHub
+      </a>
     </div>
   </div>
 </section>
 <section class="stack-section">
   <div class="container no-padding-top">
-    <div>
-      <h2>Minha Stack Dev</h2>
-      <p class="tagline">Codificando ideias. Construindo o futuro!</p>
-      <p>
-        Desenvolvedor web em constante evolução — criativo, curioso e apaixonado por tecnologia.
-      </p>
-      <div class="stack-block frontend">
-        <h3>Front-end</h3>
-        <div class="pill-grid">
-          @for (tech of stack().frontend; track tech; let i = $index) {
-            <app-stack-pill [tag]="tech" [style.--delay]="i"></app-stack-pill>
-          }
-        </div>
+    <h2>Minha Stack Dev</h2>
+    <p class="tagline">Codificando ideias. Construindo o Futuro!</p>
+    <!-- FRONTEND -->
+    <div class="stack-block frontend">
+      <h3>Front-end</h3>
+      <div class="pill-grid">
+        @for (tag of stack().frontend; track tag; let i = $index) {
+          <app-stack-pill
+            [label]="TAG_CONFIG[tag].label"
+            [iconPath]="TAG_CONFIG[tag].iconPath"
+            [category]="TAG_CONFIG[tag].category"
+            [style.--delay]="i"
+          />
+        }
       </div>
-      <div class="stack-block backend">
-        <h3>Back-end</h3>
-        <div class="pill-grid">
-          @for (tech of stack().backend; track tech; let i = $index) {
-            <app-stack-pill [tag]="tech" [style.--delay]="i"></app-stack-pill>
-          }
-        </div>
+    </div>
+    <!-- BACKEND -->
+    <div class="stack-block backend">
+      <h3>Back-end</h3>
+      <div class="pill-grid">
+        @for (tag of stack().backend; track tag; let i = $index) {
+          <app-stack-pill
+            [label]="TAG_CONFIG[tag].label"
+            [iconPath]="TAG_CONFIG[tag].iconPath"
+            [category]="TAG_CONFIG[tag].category"
+            [style.--delay]="i"
+          />
+        }
       </div>
-      <div class="stack-block database">
-        <h3>Bancos de Dados</h3>
-        <div class="pill-grid">
-          @for (tech of stack().databases; track tech; let i = $index) {
-            <app-stack-pill [tag]="tech" [style.--delay]="i"></app-stack-pill>
-          }
-        </div>
+    </div>
+    <!-- DATABASES -->
+    <div class="stack-block database">
+      <h3>Bancos de Dados</h3>
+      <div class="pill-grid">
+        @for (tag of stack().databases; track tag; let i = $index) {
+          <app-stack-pill
+            [label]="TAG_CONFIG[tag].label"
+            [iconPath]="TAG_CONFIG[tag].iconPath"
+            [category]="TAG_CONFIG[tag].category"
+            [style.--delay]="i"
+          />
+        }
       </div>
-      <div class="stack-block devops">
-        <h3>DevOps & Ferramentas</h3>
-        <div class="pill-grid">
-          @for (tech of stack().devops; track tech; let i = $index) {
-            <app-stack-pill [tag]="tech" [style.--delay]="i"></app-stack-pill>
-          }
-        </div>
+    </div>
+    <!-- DEVOPS -->
+    <div class="stack-block devops">
+      <h3>DevOps & Ferramentas</h3>
+      <div class="pill-grid">
+        @for (tag of stack().devops; track tag; let i = $index) {
+          <app-stack-pill
+            [label]="TAG_CONFIG[tag].label"
+            [iconPath]="TAG_CONFIG[tag].iconPath"
+            [category]="TAG_CONFIG[tag].category"
+            [style.--delay]="i"
+          />
+        }
       </div>
-      <div class="stack-block cms">
-        <h3>CMS & Soluções</h3>
-        <div class="pill-grid">
-          @for (tech of stack().cms; track tech; let i = $index) {
-            <app-stack-pill [tag]="tech" [style.--delay]="i"></app-stack-pill>
-          }
-        </div>
+    </div>
+    <!-- CMS -->
+    <div class="stack-block cms">
+      <h3>CMS & Soluções</h3>
+      <div class="pill-grid">
+        @for (tag of stack().cms; track tag; let i = $index) {
+          <app-stack-pill
+            [label]="TAG_CONFIG[tag].label"
+            [iconPath]="TAG_CONFIG[tag].iconPath"
+            [category]="TAG_CONFIG[tag].category"
+            [style.--delay]="i"
+          />
+        }
       </div>
     </div>
   </div>

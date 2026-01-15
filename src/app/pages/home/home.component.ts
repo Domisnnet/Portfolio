@@ -1,10 +1,18 @@
 import { Component } from '@angular/core';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { StackService } from '../../services/stack.service';
 import { PillCategory } from '../../constants/project-tags.config';
+import { StackPillComponent } from '../../components/stack-pill/stack-pill.component';
 
 @Component({
   selector: 'app-home',
+  standalone: true,
   templateUrl: './home.component.html',
+  imports: [
+    CommonModule,
+    TitleCasePipe,
+    StackPillComponent,
+  ],
 })
 export class HomeComponent {
 

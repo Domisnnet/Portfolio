@@ -1,12 +1,13 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProjectCardComponent } from '../../components/project-card/project-card.component';
+import { TagKey } from '../../constants/project-tags.config';
 
 export interface Project {
   title: string;
   description: string;
   image: string;
-  tags: string[];
+  tags: TagKey[];
   link: string;
 }
 
@@ -23,56 +24,56 @@ export class ProjectsPageComponent {
       title: 'Drakonik Nexus',
       description: 'Jogo de cartas inspirado em Yu-Gi-Oh! usando arquitetura moderna em Vue.Js',
       image: 'assets/images/drakonik-nexus.png',
-      tags: ['Vue.js', 'Tailwind.CSS', 'Firebase'],
+      tags: ['vue', 'tailwind', 'firebase'],
       link: 'https://github.com/Domisnnet/Drakonik-Nexus-Vue.Js',
     },
     {
       title: 'KingDomfy',
       description: 'Streaming musical com player funcional, inspirada no Spotify.',
       image: 'assets/images/kingdomfy.png',
-      tags: ['Angular', 'Firebase', 'Architecture', 'UX'],
+      tags: ['angular', 'firebase', 'architecture', 'ux'],
       link: 'https://github.com/Domisnnet/King-Domfy',
     },
     {
       title: 'GitHub Stats',
       description: 'Gerador de cards SVG personalizados com dados reais via API.',
       image: 'assets/images/github-stats.png',
-      tags: ['SVG', 'API', 'Automation', 'GitHub'],
+      tags: ['svg', 'api', 'automation', 'github'],
       link: 'https://github.com/Domisnnet/GitHub-Stats',
     },
     {
       title: 'Shadow Flip-Oh!',
-      description: 'Jogo de cartas com mecânicas estratégicas, animações suaves e lógica aplicada.',
+      description: 'Jogo de cartas com mecânicas estratégicas.',
       image: 'assets/images/shadow-flip-oh.png',
-      tags: ['Game Logic', 'CSS Animations', 'JavaScript'],
+      tags: ['gameLogic', 'cssAnimations', 'javascript'],
       link: 'https://github.com/Domisnnet/Shadow-Flip-Oh',
     },
     {
       title: 'Kill Buzz',
-      description: 'Jogo de reflexo em tempo real com níveis de dificuldade e gestão de vida, utilizando JavaScript e UX consciente.',
+      description: 'Jogo de reflexo em tempo real.',
       image: 'assets/images/kill-buzz.png',
-      tags: ['UX', 'Product', 'JavaScript'],
+      tags: ['ux', 'product', 'javascript'],
       link: 'https://github.com/Domisnnet/Kill-Buzz',
     },
     {
       title: 'Pokedevs',
-      description: 'Projeto temático combinando design divertido com lógica estruturada.',
+      description: 'Projeto temático combinando design divertido.',
       image: 'assets/images/pokedevs.png',
-      tags: ['JavaScript', 'CSS3', 'UI'],
+      tags: ['javascript', 'css3', 'ui'],
       link: 'https://github.com/Domisnnet/Pokedevs',
     },
     {
       title: 'Projeto Alura',
-      description: 'Aplicação estilizada com boas práticas de front-end.',
+      description: 'Aplicação estilizada com boas práticas.',
       image: 'assets/images/projeto-alura.png',
-      tags: ['HTML5', 'CSS3', 'JavaScript'],
+      tags: ['html5', 'css3', 'javascript'],
       link: 'https://github.com/Domisnnet/Projeto-Alura',
     },
     {
       title: 'Interactive Portfolio',
-      description: 'Portfólio animado com narrativa visual e microinterações.',
+      description: 'Portfólio animado com narrativa visual.',
       image: 'assets/images/portfolio.png',
-      tags: ['Angular', 'SCSS', 'Motions', 'Design'],
+      tags: ['angular', 'scss', 'motions', 'design'],
       link: 'https://portfolio-56747762-94d87.web.app/',
     },
   ]);

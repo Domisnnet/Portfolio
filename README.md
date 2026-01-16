@@ -34,18 +34,13 @@ Bem-vindo ao repositório do meu **Portfólio Profissional**. Esta aplicação �
 
 <h2 id="como-acessar">3. 🚀 Como Acessar</h2>
 
-Para rodar o projeto localmente e explorar os componentes:
+Experimente a calculadora em tempo real clicando no botão abaixo:
 
-```bash
-# Clone e entre na pasta
-git clone [https://github.com/Domisnnet/portfolio.git](https://github.com/Domisnnet/portfolio.git)
-cd portfolio
-
-# Instale e execute
-npm install
-ng serve
-Acesse: http://localhost:4200
-```
+<div align="left">
+  <a href="https://portfolio-23948217-d156e.web.app/" target="_blank">
+    <img alt="Botão Acessar" src="src/assets/images/botão.webp" height="70" width="70" />
+  </a>
+</div>
 
 ---
 

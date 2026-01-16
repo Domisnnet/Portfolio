@@ -8,6 +8,7 @@ import { StackPillComponent } from '../../components/stack-pill/stack-pill.compo
   selector: 'app-home',
   standalone: true,
   templateUrl: './home.component.html',
+  styleUrls: ['./home.component.scss'],
   imports: [
     CommonModule,
     TitleCasePipe,

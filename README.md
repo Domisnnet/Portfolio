@@ -1,59 +1,154 @@
-# Myapp
+<h2 id="sobre-o-projeto">1. 🚀 DomisDev Portfolio - Engenharia Front-end 🚀</h2>
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.2.
+![Status do Deploy](https://img.shields.io/badge/Status-Online-brightgreen)
+![Framework](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)
+![Hosting](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+[![Licença MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Domisnnet/portfolio/blob/main/LICENSE)
+![Portfólio](src/assets/images/portfolio.png)
 
-## Development server
+Bem-vindo ao repositório do meu **Portfólio Profissional**. Esta aplicação é uma vitrine técnica desenvolvida com **Angular**, utilizando componentes **Standalone** para máxima performance. O projeto combina design sofisticado em **SCSS** com uma infraestrutura escalável no **Firebase**, refletindo minha stack de especialista em Front-end.
 
-To start a local development server, run:
+---
+
+## 📚 Tabela de Conteúdo
+
+| 💻 O Projeto | 🛠️ Técnico | 🤝 Comunidade |
+| :---: | :---: | :---: |
+| [![1. Sobre](https://img.shields.io/badge/1%20-%20Sobre-4CAF50)](#sobre-o-projeto) | [![5. Destaques](https://img.shields.io/badge/5%20-%20Destaques-607D8B)](#destaques-tecnicos) | [![9. Código](https://img.shields.io/badge/9%20-%20Código-795548)](#codigo-fonte) |
+| [![2. Techs](https://img.shields.io/badge/2%20-%20Techs-2196F3)](#tecnologias-utilizadas) | [![6. Deploy](https://img.shields.io/badge/6%20-%20Deploy-009688)](#fluxo-de-deploy) | [![10. Créditos](https://img.shields.io/badge/10%20-%20Créditos-607D8B)](#créditos) |
+| [![3. Acessar](https://img.shields.io/badge/3%20-%20Acessar-FF9800)](#como-acessar) | [![7. Contribuir](https://img.shields.io/badge/7%20-%20Contribuir-3F51B5)](#como-contribuir) | [![11. Licença](https://img.shields.io/badge/11%20-%20Licença-E91E63)](#licenca) |
+| [![4. Funções](https://img.shields.io/badge/4%20-%20Funções-9C27B0)](#funcionalidades) | [![8. FAQ](https://img.shields.io/badge/8%20-%20FAQ-FFC107)](#faq) | [![12. Perfil](https://img.shields.io/badge/12%20-%20Perfil-212121)](#perfil-do-github) |
+
+---
+
+<h2 id="tecnologias-utilizadas">2. ⚙️ Tecnologias Utilizadas</h2>
+
+| Camada | Tecnologias | Descrição |
+| :--- | :--- | :--- |
+| **Core** | ![Angular](https://img.shields.io/badge/Angular-DD0031?style=flat-square&logo=angular&logoColor=white) | Framework principal com arquitetura Standalone. |
+| **Style** | ![Sass](https://img.shields.io/badge/Sass-CC6699?style=flat-square&logo=sass&logoColor=white) | Pré-processador SCSS para estilização modular. |
+| **Backend/Host** | ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black) | Hospedagem, Functions e Analytics. |
+| **CI/CD** | ![Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white) | Automação de builds e deploys contínuos. |
+
+---
+
+<h2 id="como-acessar">3. 🚀 Como Acessar</h2>
+
+Para rodar o projeto localmente e explorar os componentes:
 
 ```bash
+# Clone e entre na pasta
+git clone [https://github.com/Domisnnet/portfolio.git](https://github.com/Domisnnet/portfolio.git)
+cd portfolio
+
+# Instale e execute
+npm install
 ng serve
+Acesse: http://localhost:4200
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+<h2 id="funcionalidades">4. 🧩 Funcionalidades Principais</h2>
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+| Funcionalidade | Descrição |
+| :--- | :--- |
+| 🛡️ **Standalone Components** | Arquitetura moderna sem NgModules, reduzindo o bundle size e complexidade. |
+| 💊 **Stack Pills System** | Componente reutilizável para exibição dinâmica de tecnologias com ícones. |
+| 📱 **Adaptive Design** | Layout Hero que transiciona de horizontal (PC) para vertical (Mobile) automaticamente. |
+| ⚡ **Firebase Hosting** | Entrega ultra-rápida via CDN global com certificado SSL e cache inteligente. |
+| 🎨 **Material Pallete** | Identidade visual baseada em princípios de design atômico e cores Material. |
+
+---
+
+<h2 id="destaques-tecnicos">5. 💻 Destaques Técnicos</h2>
+
+### 📐 O Componente `stack-pill`
+Desenvolvi um sistema de "Pills" altamente customizável. Ele recebe propriedades dinâmicas para ícones SVG e labels, aplicando cores baseadas na categoria da tecnologia através de mixins do SCSS, mantendo o código DRY e organizado.
+
+### 🔄 CI/CD com Firebase Studio
+O portfólio utiliza **GitHub Actions** para que cada `push` na branch principal dispare um build de produção (`ng build`) e o deploy imediato para o **Firebase Hosting**, garantindo que o site esteja sempre atualizado sem intervenção manual.
+
+---
+
+<h2 id="fluxo-de-deploy">6. 📦 Fluxo de Deploy</h2>
+
+Para lançar uma nova versão manualmente ou configurar o ambiente:
 
 ```bash
-ng generate component component-name
+# Build otimizado para produção
+ng build --configuration production
+
+# Deploy via Firebase CLI
+firebase deploy
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+---
 
-```bash
-ng generate --help
-```
+<h2 id="como-contribuir">7. 🤝 Como Contribuir</h2>
 
-## Building
+Siga os passos abaixo para fortalecer este projeto e sugerir melhorias:
 
-To build the project run:
+| Fase | Ação | Link / Comando |
+| :---: | :--- | :--- |
+| **01** | **Fork** | [![Fork](https://img.shields.io/badge/-Fazer%20Fork-blue?style=flat-square&logo=github)](https://github.com/Domisnnet/portfolio/fork) |
+| **02** | **Branch** | `git checkout -b feature/MinhaMelhoria` |
+| **03** | **Commit** | `git commit -m 'feat: add nova seção de projetos'` |
+| **04** | **Push** | `git push origin feature/MinhaMelhoria` |
+| **05** | **PR** | [![Abrir PR](https://img.shields.io/badge/-Abrir%20PR-green?style=flat-square&logo=git)](https://github.com/Domisnnet/portfolio/compare) |
 
-```bash
-ng build
-```
+---
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+<h2 id="faq">8. 🧠 Perguntas Frequentes</h2>
 
-## Running unit tests
+<details>
+<summary><strong>Por que Angular Standalone em vez de NgModules ❓</strong></summary>
+<p>🚀 <strong>Resposta:</strong> A arquitetura Standalone elimina a necessidade de declarar componentes em módulos. Isso torna o código mais limpo, facilita o <em>Lazy Loading</em> e reduz o tamanho final do bundle.</p>
+</details>
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+<details>
+<summary><strong>Como foi tratada a performance do portfólio ❓</strong></summary>
+<p>⚡ <strong>Resposta:</strong> Além do Standalone, apliquei otimizações de imagem e minificação de SCSS, utilizando a CDN global do <strong>Firebase Hosting</strong> para atingir pontuações altas no <em>Lighthouse</em>.</p>
+</details>
 
-```bash
-ng test
-```
+<details>
+<summary><strong>O projeto é amigável para SEO ❓</strong></summary>
+<p>🔍 <strong>Resposta:</strong> Sim. Mesmo sendo uma SPA, utilizei tags semânticas do HTML5 e metadados estruturados para garantir a indexação correta por motores de busca.</p>
+</details>
 
-## Running end-to-end tests
+<details>
+<summary><strong>Por que utilizar SCSS ao invés de CSS puro ❓</strong></summary>
+<p>🎨 <strong>Resposta:</strong> O SCSS permite variáveis e mixins. No componente <code>stack-pill</code>, usei mixins para gerar cores automaticamente com base em mapas, mantendo a consistência visual.</p>
+</details>
 
-For end-to-end (e2e) testing, run:
+---
 
-```bash
-ng e2e
-```
+<h2 id="codigo-fonte">9. 💻 Código Fonte</h2>
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Explore a arquitetura Angular completa no repositório oficial:
 
-## Additional Resources
+[![Repositório](https://img.shields.io/badge/Repositório-Portfolio--DomisDev-1DB954?style=for-the-badge&logo=github)](https://github.com/Domisnnet/portfolio)
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+---
+
+<h2 id="créditos">10. 📝 Créditos & Reconhecimentos</h2>
+
+| Atribuição | Responsável / Recurso | Descrição |
+| :--- | :--- | :--- |
+| **Full-Stack Dev** | **DomisDev** | Design, Arquitetura Angular e Configuração DevOps. |
+| **Infraestrutura** | **Google Firebase** | Provedor de Hosting e serviços cloud. |
+| **Apoio Técnico** | **Google Gemini** | Padronização King-Domfy e refinamento documental. |
+
+---
+
+<h2 id="licenca">11. 📄 Licença</h2>
+
+Este projeto está sob a [![Licença MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Domisnnet/portfolio/blob/main/LICENSE)
+
+---
+
+<h2 id="perfil-do-github">12. 👨‍💻 Perfil do GitHub</h2>
+
+<a href="https://github.com/Domisnnet"> 
+    <img src="src/assets/images/DomisDev.png" width="120" style="border-radius: 50%" alt="DomisDev GitHub"> 
+</a>

@@ -1,4 +1,4 @@
-<h2 id="sobre-o-projeto">1. 🚀 DomisDev Portfolio - Engenharia Front-end 🚀</h2>
+<h2 id="sobre-o-projeto">1.  DomisDev Portfolio - Engenharia Front-end 🚀🚀</h2>
 
 ![Status do Deploy](https://img.shields.io/badge/Status-Online-brightgreen)
 ![Framework](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)

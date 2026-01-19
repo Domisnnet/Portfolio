@@ -1,145 +1,111 @@
-/* ==================
-   BACKGROUND 
-================== */
-.cosmic-background {
-    background-color: #050508;
-    background-image: radial-gradient(1px 1px at 20% 30%, rgba(255, 255, 255, 0.15), transparent), radial-gradient(1px 1px at 80% 70%, rgba(255, 255, 255, 0.10), transparent), radial-gradient(2px 2px at 40% 80%, rgba(255, 255, 255, 0.08), transparent);
-}
-
-/* =========================
-    SEÇÃO OBSERVADA 
-========================= */
+/* =========================================
+   FUNDAMENTOS DO ESPAÇO (BACKDROP)
+========================================= */
 .cosmic-section {
     position: relative;
     background-color: #050508;
     overflow: hidden;
     isolation: isolate;
+
+    &::before {   /* Camada 1: Estrelas Fixas */
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(1px 1px at 20% 30%, rgba(255, 255, 255, 0.3), transparent),
+            radial-gradient(1.5px 1.5px at 70% 60%, rgba(255, 255, 255, 0.2), transparent),
+            radial-gradient(2px 2px at 40% 80%, rgba(255, 255, 255, 0.15), transparent);
+        background-size: 200px 200px;
+        opacity: 0.5;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    &::after {   /* Camada 2: Névoa Cósmica Animada */
+        content: '';
+        position: absolute;
+        inset: -50%;
+        background: radial-gradient(circle at center, rgba(0, 255, 200, 0.03) 0%, transparent 70%);
+        animation: cosmic-drift 20s linear infinite;
+        z-index: -1;
+        pointer-events: none;
+    }
 }
 
-.cosmic-section::before {
-    z-index: -1; 
-}
-
-/* =======================
-    CAMADA ATMOSFÉRICA 
-======================= */
-.cosmic-section::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(1px 1px at 20% 30%, rgba(255, 255, 255, 0.25), transparent), radial-gradient(1px 1px at 70% 60%, rgba(255, 255, 255, 0.15), transparent), radial-gradient(2px 2px at 40% 80%, rgba(255, 255, 255, 0.20), transparent);
-    background-size: 100% 100%;
-    opacity: 0.6;
-    pointer-events: none;
-    z-index: 0;
-}
-
-.cosmic-section::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-}
-
-/* =========================
-    HUD ALIENÍGENA
-========================= */
+/* =========================================
+    HUD E ELEMENTOS DE INTERFACE ALIEN
+========================================= */
 .cosmic-hud {
     position: absolute;
     top: 32px;
     left: 40px;
     font-family: 'Fira Code', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    color: rgba(0, 255, 200, 0.35);
+    font-size: 0.7rem;
+    color: rgba(0, 255, 200, 0.4);
+    text-shadow: 0 0 8px rgba(0, 255, 200, 0.2);
+    z-index: 10;
     pointer-events: none;
-    z-index: 1;
+
+    span {
+        display: block;
+        margin-bottom: 4px;
+        animation: signal-glitch 4s step-end infinite;
+    }
 }
 
-.cosmic-hud span {
-    display: block;
-    opacity: 0.6;
+.alien-mark {
+    position: absolute;
+    bottom: 50px;
+    right: 50px;
+    font-size: 3rem;
+    color: rgba(0, 255, 200, 0.05);
+    user-select: none;
+    pointer-events: none;
+    transform: rotate(-10deg);
 }
 
 /* =========================================
-    GLYPH / MARCA ALIENÍGENA RECORRENTE
+    FLUTUAÇÃO ZERO-G (PARA O HOST DO CARD)
 ========================================= */
-.alien-mark {
-    position: absolute;
-    bottom: 40px;
-    right: 60px;
-    font-family: monospace;
-    font-size: 2.5rem;
-    letter-spacing: 0.3em;
-    content: '◉ △ ─';
-    color: rgba(0, 255, 200, 0.08);
-    transform: rotate(-12deg);
-    opacity: 0.04;
-    filter: blur(0.2px);
-    user-select: none;
-    pointer-events: none;
-    z-index: 0;
-}
-
-/* ===============================
-    META-INFORMAÇÃO - HUD 
-=============================== */
-.alien-meta {
-    font-family: var(--font-code, monospace);
-    font-size: 0.65rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    opacity: 0.5;
-}
-
-/* ===============================
-    SINAL DORMENTE (Easter Egg)
-================================ */
-.alien-signal {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    font-family: var(--font-code, monospace);
-    font-size: 0.6rem;
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* ===================
-    FLUTUAÇÃO ZERO-G
-=================== */
-.project-card {
-    animation: zeroGravity 14s ease-in-out infinite;
-    animation-delay: calc(var(--index) * -2s);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 60px rgba(0, 255, 200, 0.05);
-}
-
-/* =================
-    KEYFRAMES
-================= */
 @keyframes zeroGravity {
     0% {
-        transform: translateY(0) rotate(var(--rotation));
+        transform: translateY(0) rotate(var(--rotation, 0deg));
     }
+
     50% {
-        transform: translateY(-6px) rotate(calc(var(--rotation) + 0.6deg));
+        transform: translateY(-12px) rotate(calc(var(--rotation, 0deg) + 1.5deg));
     }
+
     100% {
-        transform: translateY(0) rotate(var(--rotation));
+        transform: translateY(0) rotate(var(--rotation, 0deg));
     }
 }
 
-/* ===============
-    Easter egg
-=============== */    
+@keyframes cosmic-drift {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 @keyframes signal-glitch {
-    0% {
-        opacity: 0;
+
+    0%,
+    90% {
+        opacity: 0.6;
+        transform: translateX(0);
     }
-    50% {
+
+    92% {
         opacity: 1;
+        transform: translateX(2px);
     }
-    100% {
-        opacity: 0;
+
+    94% {
+        opacity: 0.6;
+        transform: translateX(-1px);
     }
 }

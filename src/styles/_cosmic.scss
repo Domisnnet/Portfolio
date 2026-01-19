@@ -4,46 +4,110 @@
     overflow: hidden;
     isolation: isolate;
     min-height: 100vh;
-
-    &::after {   // Nebulosa verde suave de fundo
-        content: '';
-        position: absolute;
-        inset: 0;
-        background:
-            radial-gradient(circle at 50% 50%, rgba(0, 255, 200, 0.1) 0%, transparent 60%),
-            radial-gradient(circle at 20% 80%, rgba(0, 255, 200, 0.05) 0%, transparent 40%);
-        z-index: -2;
-        animation: nebula-float 10s ease-in-out infinite alternate;
-    }
 }
 
-.tractor-beam {    // O Círculo de Raio "Tratorado" (360 graus)
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 800px;
-    height: 800px;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    background: repeating-conic-gradient(from 0deg, rgba(0, 255, 200, 0.08) 0deg 15deg, transparent 16deg 30deg);  // Efeito de fatias de luz do esboço
-    mask-image: radial-gradient(circle, transparent 40%, black 45%, black 55%, transparent 60%);  // Deixa apenas o aro visível
-    z-index: -1;
-    animation: orbit-rotate 40s linear infinite;
-    pointer-events: none;
-}
-
+/* GRADE DE MAPEAMENTO ALIEN */
 .cosmic-grid-overlay {
     position: absolute;
     inset: 0;
     background-image:
-        linear-gradient(rgba(0, 255, 200, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 255, 200, 0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
+        linear-gradient(rgba(0, 255, 200, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 200, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
     z-index: -1;
-    mask-image: radial-gradient(circle, black 40%, transparent 90%);
+    mask-image: radial-gradient(circle at 50% 50%, black 10%, transparent 70%);
+    animation: grid-scan 10s linear infinite;
 }
 
-@keyframes orbit-rotate {
+/* RAIO TRATORADO (CÌRCULO DE ENERGIA PULSANTE) */
+.tractor-beam {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 600px;
+    height: 600px;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    pointer-events: none;
+
+    // O efeito de circunferência que "mede" os cards
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 2px solid rgba(0, 255, 200, 0.4);
+        box-shadow: 0 0 40px rgba(0, 255, 200, 0.2), inset 0 0 40px rgba(0, 255, 200, 0.2);
+        animation: beam-pulse 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    // Linhas de laser cruzadas (Targeting)
+    &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 140%;
+        height: 140%;
+        transform: translate(-50%, -50%);
+        background:
+            linear-gradient(90deg, transparent 49.8%, rgba(0, 255, 200, 0.2) 50%, transparent 50.2%),
+            linear-gradient(0deg, transparent 49.8%, rgba(0, 255, 200, 0.2) 50%, transparent 50.2%);
+        animation: target-rotate 20s linear infinite;
+    }
+}
+
+/* HUD REFORMULADO (Mais "Militar/Alien") */
+.cosmic-hud {
+    position: fixed;
+    top: 120px;
+    left: 40px;
+    font-family: 'Fira Code', monospace;
+    color: #00ffc8;
+    z-index: 10;
+
+    .status-line {
+        display: block;
+        font-size: 0.7rem;
+        letter-spacing: 2px;
+        margin-bottom: 5px;
+        background: rgba(0, 255, 200, 0.1);
+        padding: 2px 8px;
+        border-left: 3px solid #00ffc8;
+        animation: blink 1.5s infinite;
+    }
+}
+
+@keyframes beam-pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+        border-width: 8px;
+    }
+
+    50% {
+        opacity: 1;
+        border-width: 2px;
+    }
+
+    100% {
+        transform: scale(1.4);
+        opacity: 0;
+        border-width: 1px;
+    }
+}
+
+@keyframes grid-scan {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 50px 50px;
+    }
+}
+
+@keyframes target-rotate {
     from {
         transform: translate(-50%, -50%) rotate(0deg);
     }
@@ -53,14 +117,8 @@
     }
 }
 
-@keyframes nebula-float {
-    from {
+@keyframes blink {
+    50% {
         opacity: 0.5;
-        transform: scale(1);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1.1);
     }
 }

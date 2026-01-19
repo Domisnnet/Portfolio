@@ -4,6 +4,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap');
 
 /* =====================
   Fontes
@@ -11,8 +12,10 @@
 :root {
   --font-main: 'Poppins', sans-serif;
   --font-code: 'Fira Code', monospace;
+  --font-script: 'Caveat', cursive;
+  --font-title: 'Dancing Script', cursive;
 
-  /* =====================
+/* =====================
   Color Palette
 ===================== */
   --primary-color: #4f46e5;

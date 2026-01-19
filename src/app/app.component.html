@@ -1,7 +1,7 @@
-<div [ngClass]="{'hidden': !loading}" class="loader-container">
-    <app-loader *ngIf="loading"></app-loader>
+<div class="loader-overlay" *ngIf="loading$ | async">
+    <app-loader></app-loader>
 </div>
-<div class="app-content" [ngClass]="{'visible': !loading}">
+<div class="app-content" [class.visible]="!(loading$ | async)">
     <app-header></app-header>
     <main>
         <router-outlet></router-outlet>

@@ -5,7 +5,9 @@
     isolation: isolate;
     min-height: 100vh;
 
-    /* 1. NEBULOSA ORGÂNICA */
+    /* ======================
+        ESTILO DE FUNDO
+    ====================== */   
     &::before {
         content: '';
         position: absolute;
@@ -23,7 +25,9 @@
     }
 }
 
-/* 2. ESTRELAS CINTILANTES EM CAMADAS */
+/* ====================================
+    ESTRELAS CINTILANTES EM CAMADAS 
+==================================== */
 .stars-overlay {
     position: absolute;
     inset: 0;
@@ -37,7 +41,9 @@
     animation: stars-twinkle 4s ease-in-out infinite alternate;
 }
 
-/* 3. GRADE DE MAPEAMENTO (Mantida e Refinada) */
+/* =========================
+    GRADE DE MAPEAMENTO 
+========================= */
 .cosmic-grid-overlay {
     position: absolute;
     inset: 0;
@@ -50,7 +56,9 @@
     pointer-events: none;
 }
 
-/* 4. RAIO TRATOR PULSANTE */
+/* ========================
+    RAIO TRATOR PULSANTE 
+======================== */
 .tractor-beam {
     position: absolute;
     top: 50%;
@@ -72,7 +80,9 @@
     }
 }
 
-/* ANIMAÇÕES ESPACIAIS */
+/* ========================
+    ANIMAÇÕES ESPACIAIS 
+======================== */
 @keyframes nebula-drift {
     from {
         transform: translate(-50%, -50%) rotate(0deg) scale(1);

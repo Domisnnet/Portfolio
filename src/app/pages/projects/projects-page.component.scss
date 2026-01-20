@@ -86,8 +86,19 @@
   Mobile / Tablet
 ========================= */
 @media (max-width: 1024px) {
-  .projects-grid .project-card {
-    transform: none !important;
-    box-shadow: none !important;
+  .tractor-beam,
+  .cosmic-hud,         
+  .scanning-artifact { 
+    display: none !important;
+  }
+
+  .stars-overlay {
+    opacity: 0.15;
+    background-size: 200px 200px;
+  }
+
+  .cosmic-grid-overlay {
+    background-size: 40px 40px;
+    mask-image: radial-gradient(circle at 50% 50%, black 10%, transparent 90%);
   }
 }

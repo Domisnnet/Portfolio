@@ -13,7 +13,6 @@
   perspective: 1200px;
 
   &:hover { 
-    transform: scale(1.05); 
     transition: transform 0.3s ease; 
 
     .alien-scan-marker {
@@ -96,8 +95,6 @@
     text-overflow: ellipsis;
   }
 }
-
-.artifact-card:hover img { transform: scale(1.1); }
 
 /* ==================
   Verso do Card

@@ -14,7 +14,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap; // Permite quebrar a linha em telas pequenas
+  flex-wrap: wrap; 
   gap: 1rem;
 }
 
@@ -22,7 +22,7 @@
   color: var(--text-color);
   font-size: 0.9rem;
   text-align: center;
-  flex-grow: 1; // Permite que o texto ocupe espaço
+  flex-grow: 1; 
 }
 
 /* =========================
@@ -32,7 +32,7 @@
   display: flex;
   gap: 1rem;
   justify-content: center;
-  flex-grow: 1; // Permite que os ícones ocupem espaço
+  flex-grow: 1; 
 
   .icon {
     width: 1.5rem;
@@ -54,7 +54,7 @@
 ========================= */
 @media (min-width: 768px) {
   .footer-container {
-    flex-wrap: nowrap; // Impede a quebra de linha em telas maiores
+    flex-wrap: nowrap; 
   }
 
   .copyright {

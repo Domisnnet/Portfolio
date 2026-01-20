@@ -23,10 +23,18 @@
         filter: blur(80px);
         animation: nebula-drift 15s ease-in-out infinite alternate;
     }
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        pointer-events: none;
+    }
 }
 
 /* =========================
-    Estrelas cintilantes
+    Estrelas
   ========================= */
 .stars-overlay {
     position: absolute;
@@ -62,14 +70,14 @@
 }
 
 /* =========================
-    Raio trator pulsante
+    Raio trator (desktop)
   ========================= */
 .tractor-beam {
     position: fixed;
     top: 50%;
     left: 50%;
-    width: 960PX;
-    height: 960PX;
+    width: 960px;
+    height: 960px;
     transform: translate(-50%, -50%);
     z-index: -1;
     pointer-events: none;
@@ -83,7 +91,9 @@
         height: 100%;
         transform: translate(-50%, -50%);
         border-radius: 50%;
-        background: radial-gradient(circle at center, rgba(0, 255, 200, 0.25) 0%, rgba(0, 255, 200, 0.05) 60%, transparent 80%);
+        background: radial-gradient(circle at center,
+            rgba(0, 255, 200, 0.25) 0%,
+            rgba(0, 255, 200, 0.05) 60%, transparent 80%);
         box-shadow:
             0 0 120px rgba(0, 255, 200, 0.2),
             0 0 250px rgba(0, 255, 200, 0.1) inset;
@@ -133,24 +143,52 @@
     }
 }
 
-/* =========================
-    Mobile/Tablet
-  ========================= */
-@media (max-width: 1024px) {
-    .tractor-beam {
-        display: none;
+@keyframes particles-float {
+    from {
+        background-position: 0 0, 0 0, 0 0;
     }
 
+    to {
+        background-position: 200px 200px, 100px 150px, 150px 100px;
+    }
+}
+
+/* =========================
+    Mobile / Tablet
+  ========================= */
+@media (max-width: 1024px) {
+
+    .tractor-beam,
     .cosmic-hud {
         display: none;
     }
 
+    .cosmic-section::before {
+        background: radial-gradient(circle at center, rgba(0, 255, 200, 0.08) 0%, rgba(0, 0, 0, 0.05) 70%);
+        filter: blur(60px);
+    }
+
     .stars-overlay {
-        opacity: 0.2;
+        opacity: 0.15;
+        background-image:
+            radial-gradient(1px 1px at 20px 20px, #fff, transparent),
+            radial-gradient(1.2px 1.2px at 80px 120px, rgba(0, 255, 200, 0.1), transparent),
+            radial-gradient(0.8px 0.8px at 150px 60px, #fff, transparent);
         background-size: 200px 200px;
+        animation: stars-twinkle 6s ease-in-out infinite alternate;
     }
 
     .cosmic-grid-overlay {
         background-size: 40px 40px;
+        mask-image: radial-gradient(circle at 50% 50%, black 10%, transparent 90%);
+    }
+
+    .cosmic-section::after {
+        background-image:
+            radial-gradient(1px 1px at 10% 20%, rgba(0, 255, 200, 0.05), transparent),
+            radial-gradient(1px 1px at 70% 30%, rgba(0, 255, 200, 0.04), transparent),
+            radial-gradient(1px 1px at 50% 80%, rgba(0, 255, 200, 0.06), transparent);
+        background-size: 200px 200px;
+        animation: particles-float 20s linear infinite;
     }
 }

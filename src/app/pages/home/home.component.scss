@@ -40,7 +40,7 @@
   HERO TEXT
 ========================= */
 .hero-text h1 {
-  color: var(--text-color-secondary, #94a3b8);
+  color: var(--text-color-secondary);
   font-size: 2.4rem;
   font-weight: 800;
   margin-bottom: 4px;
@@ -49,7 +49,7 @@
 .hero-text h2 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-color-secondary, #94a3b8);
+  color: var(--text-color-secondary);
   margin-bottom: 16px;
 }
 
@@ -57,7 +57,7 @@
   max-width: 520px;
   line-height: 1.6;
   margin-bottom: 24px;
-  color: var(--text-color-secondary, #94a3b8);
+  color: var(--text-color-secondary);
 }
 
 /* =========================
@@ -86,7 +86,7 @@
 .btn.outline {
   background: transparent;
   color: #e5e7eb;
-  border: 1px solid rgba(148, 163, 184, 0.4);
+  border: 2px solid rgba(148, 163, 184, 0.4);
 }
 
 .btn.outline:hover {

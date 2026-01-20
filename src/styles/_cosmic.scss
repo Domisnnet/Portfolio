@@ -35,7 +35,7 @@
 
 /* =========================
     Estrelas
-  ========================= */
+========================= */
 .stars-overlay {
     position: absolute;
     inset: 0;
@@ -56,7 +56,7 @@
 
 /* =========================
     Grade cósmica
-  ========================= */
+========================= */
 .cosmic-grid-overlay {
     position: absolute;
     inset: 0;
@@ -70,8 +70,8 @@
 }
 
 /* =========================
-    Raio trator (desktop)
-  ========================= */
+    Raio trator 
+========================= */
 .tractor-beam {
     position: fixed;
     top: 50%;
@@ -103,7 +103,7 @@
 
 /* =========================
     Animações
-  ========================= */
+========================= */
 @keyframes nebula-drift {
     from {
         transform: translate(-50%, -50%) rotate(0deg) scale(1);
@@ -153,19 +153,54 @@
     }
 }
 
+@keyframes nebula-pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.7;
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(1.05);
+        opacity: 0.85;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 0.7;
+    }
+}
+
+@keyframes shoot {
+    0% {
+        transform: translate(-100px, -50px) rotate(45deg);
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(120vw, 100vh) rotate(45deg);
+        opacity: 0;
+    }
+}
+
 /* =========================
     Mobile / Tablet
-  ========================= */
+========================= */
 @media (max-width: 1024px) {
 
     .tractor-beam,
-    .cosmic-hud {
-        display: none;
+    .cosmic-hud,
+    .scanning-artifact {
+        display: none !important;
     }
 
     .cosmic-section::before {
         background: radial-gradient(circle at center, rgba(0, 255, 200, 0.08) 0%, rgba(0, 0, 0, 0.05) 70%);
         filter: blur(60px);
+        animation: nebula-pulse 12s ease-in-out infinite alternate;
     }
 
     .stars-overlay {
@@ -190,5 +225,14 @@
             radial-gradient(1px 1px at 50% 80%, rgba(0, 255, 200, 0.06), transparent);
         background-size: 200px 200px;
         animation: particles-float 20s linear infinite;
+    }
+
+    .shooting-star {
+        position: absolute;
+        width: 2px;
+        height: 60px;
+        background: linear-gradient(to bottom, rgba(0, 255, 200, 0.5), transparent);
+        border-radius: 50%;
+        animation: shoot 3s linear infinite;
     }
 }

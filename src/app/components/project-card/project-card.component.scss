@@ -1,184 +1,218 @@
 :host {
   display: block;
-  width: 220px;
-  animation: zeroGravity 12s ease-in-out infinite alternate;
-  position: relative;
-  z-index: 10;
-}
+  width: 280px;
+  height: 350px;
 
-.artifact-card {
-  width: 100%;
-  height: 460px;
-  position: relative;
-  perspective: 1200px;
+  perspective: 1000px;
+
+  /* leve rotação inicial aleatória */
+  transform: rotate(var(--rotation, 0deg));
+  transition: transform 0.45s ease;
 
   &:hover {
-    transition: transform 0.3s ease;
-
-    .alien-scan-marker {
-      opacity: 1 !important;
-      transform: scale(1.2);
-    }
+    transform: rotate(0deg) scale(1.1);
+    z-index: 10;
   }
 }
 
-.artifact-inner {
+/* =========================
+   CARD 3D
+========================= */
+.photo-card {
   width: 100%;
   height: 100%;
   position: relative;
+
   transform-style: preserve-3d;
-  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+
+  &:hover {
+    transform: rotateY(180deg);
+  }
 }
 
-.artifact-card.is-flipped .artifact-inner {
-  transform: rotateY(180deg);
-}
-
-/* ==================
-  Faces
-================== */
-.artifact-face {
+/* =========================
+   FACES (BASE)
+========================= */
+.face {
   position: absolute;
   inset: 0;
+
   backface-visibility: hidden;
-  border-radius: 4px;
+  border-radius: 2px;
+
+  background: #ffffff; /* papel fotográfico */
+  padding: 12px 12px 44px; /* margem inferior estilo Polaroid */
+
+  box-shadow:
+    0 10px 20px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+
   overflow: hidden;
 }
 
-/* ==================
-  Frente
-================== */
-.artifact-front {
+/* =========================
+   FRENTE
+========================= */
+.front {
   display: flex;
   flex-direction: column;
-  position: relative;
-  background: var(--artifact-bg-front);
-  padding: 7px;
-  box-shadow: var(--artifact-shadow);
 
-  .artifact-photo {
+  img {
     width: 100%;
-    height: 280px;
-    background: #000;
-    position: relative;
-    overflow: hidden;
-    border-radius: 4px;
+    height: 100%;
+    object-fit: cover;
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: transform 0.6s ease;
-    }
-
-    .alien-scan-marker {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      color: var(--artifact-accent);
-      width: 24px;
-      height: 24px;
-      filter: drop-shadow(0 0 5px var(--artifact-accent));
-      opacity: 0;
-      transition: all 0.4s ease;
-      transform: scale(0.8);
-      z-index: 2;
-    }
+    filter: sepia(12%) contrast(1.1) brightness(0.98);
+    transition: filter 0.4s ease;
   }
 
-  .handwritten-label {
-    margin-top: auto;
-    padding-bottom: 8px;
-    font-family: var(--font-title);
-    font-size: 1.45rem;
-    color: var(--artifact-text-front);
+  .caption {
+    margin-top: 10px;
+    font-family: var(--font-accent);
+    font-size: 0.85rem;
+    color: #222;
     text-align: center;
-    transform: rotate(-2deg);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 }
 
-/* ==================
-  Verso
-================== */
-.artifact-back {
-  background: var(--artifact-bg-back);
+/* =========================
+   VERSO
+========================= */
+.back {
   transform: rotateY(180deg);
-  padding: 30px;
+
+  background: var(--surface);
+  color: var(--text-color);
+
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--artifact-border);
-  box-shadow: inset 0 0 20px rgba(var(--artifact-accent-rgb), 0.1);
+  justify-content: center;
+  align-items: center;
 
-  .artifact-header {
-    margin-bottom: 15px;
+  text-align: center;
+  padding: 20px;
 
-    h3 {
-      color: var(--artifact-text-back);
-      font-size: 1.1rem;
-      margin: 0 0 8px;
-    }
+  border: 1px solid rgba(255, 255, 255, 0.75);
 
-    p {
-      color: var(--artifact-text-muted);
-      font-size: 0.8rem;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 3;
-      line-clamp: 3;
-      overflow: hidden;
-    }
+  h3 {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    margin-bottom: 8px;
   }
 
-  .artifact-stack {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    flex-grow: 1;
-    align-content: flex-start;
-    overflow-y: auto;
+  p {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    opacity: 0.85;
   }
 
-  .artifact-action {
-    margin-top: auto;
-    padding-top: 15px;
+  a {
+    margin-top: 14px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--artifact-accent);
+    text-decoration: none;
 
-    .artifact-button {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      text-align: center;
-      color: var(--artifact-accent);
-      border: 1px solid var(--artifact-accent);
-      border-radius: 20px;
-      text-decoration: none;
-      background: rgba(var(--artifact-accent-rgb), 0.05);
-      font-weight: 600;
-      font-size: 0.85rem;
-      transition: all 0.3s ease;
-
-      &:hover {
-        background: rgba(var(--artifact-accent-rgb), 0.2);
-        box-shadow: 0 0 15px rgba(var(--artifact-accent-rgb), 0.3);
-      }
+    &:hover {
+      text-decoration: underline;
     }
   }
 }
 
-/* ==================
-  Animação
-================== */
-@keyframes zeroGravity {
-  0%,
+.projects-page {
+  position: relative;
+  min-height: 100vh;
+  padding: 80px 24px 120px;
+  background: radial-gradient(circle at top, #020b0b 0%, #000 60%);
+  overflow: hidden;
+}
+
+/* =========================
+  HEADER
+========================= */
+.projects-header {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto 80px;
+  text-align: center;
+}
+
+.header-content {
+  position: relative;
+  z-index: 2;
+}
+
+.header-content h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(2.6rem, 4vw, 3.4rem);
+  font-weight: 800;
+  color: var(--text-color);
+  margin-bottom: 12px;
+}
+
+.header-content p {
+  font-family: var(--font-body);
+  color: var(--text-color-secondary);
+  font-size: 1rem;
+}
+
+/* =========================
+  SCANNING ARTIFACT
+========================= */
+.alien-scan-marker {
+  position: absolute;
+  top: 8px;
+  left: calc(50% - 320px); 
+  width: 26px;
+  height: 26px;
+  color: var(--artifact-accent);
+  filter: drop-shadow(0 0 6px var(--artifact-accent));
+  opacity: 0;
+  transform: scale(0.85);
+  animation: scanPulse 2.4s ease-in-out infinite;
+  z-index: 1;
+}
+
+/* animação */
+@keyframes scanPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
   100% {
-    transform: translateY(0) rotate(var(--rotation, 0deg));
+    opacity: 0;
+    transform: scale(0.8);
   }
-  50% {
-    transform: translateY(-10px)
-      rotate(calc(var(--rotation, 0deg) + 1deg));
+}
+
+/* =========================
+  DESKTOP ONLY
+========================= */
+@media (max-width: 1024px) {
+  .alien-scan-marker {
+    display: none;
   }
+}
+
+/* =========================
+  GRID DE PROJETOS
+========================= */
+.projects-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 64px;
 }

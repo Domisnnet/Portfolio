@@ -1,9 +1,8 @@
-<div class="grid-container">
-  @for (project of projects; track project.title) {
-    <app-project-lab-card 
-      [image]="project.image" 
-      [title]="project.title" 
-      [description]="project.description" 
-    />
-  }
+<div class="lab-page">
+  <h1>LAB DE PROJETOS</h1>
+  <app-project-lab-card
+    *ngFor="let project of projects"
+    [title]="project.title"
+    [image]="project.image"
+  ></app-project-lab-card>
 </div>

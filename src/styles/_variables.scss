@@ -1,24 +1,158 @@
-/* ================================
-  Importando fontes e variáveis
-================================= */
+/* ===========
+Fonts
+=========== */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap');
 
-/* =====================
-  Fontes
-===================== */
 :root {
   --font-main: 'Poppins', sans-serif;
   --font-code: 'Fira Code', monospace;
   --font-script: 'Caveat', cursive;
   --font-title: 'Dancing Script', cursive;
+}
+
+/* ===============
+Brand Tokens 
+=============== */
+:root {
+  --color-brand-primary: #4f46e5;
+  --color-brand-secondary: #4338ca;
+  --color-brand-accent: #06b6d4;
+}
+
+/* =====================================================
+Semantic Tokens — Dark Theme 
+===================================================== */
+:root {
+  /* =====================
+  Text
+  ===================== */
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #6b7280;
+  --color-text-inverse: #111827;
+  --color-text-accent: var(--color-brand-accent);
+  --color-text-link: #38bdf8;
+  --color-text-link-hover: #7dd3fc;
 
   /* =====================
-    Color Palette
+  Background
   ===================== */
-  --primary-color: #4f46e5;
-  --secondary-color: #4338ca;
-  --accent-color: #06b6d4;
+  --color-bg-body: #111827;
+  --color-bg-surface: rgba(255, 255, 255, 0.05);
+  --color-bg-surface-alt: rgba(255, 255, 255, 0.08);
+  --color-bg-header: rgba(17, 24, 39, 0.8);
+  --color-bg-overlay: rgba(0, 0, 0, 0.6);
+
+  /* =====================
+  Border
+  ===================== */
+  --color-border-default: #374151;
+  --color-border-muted: #1f2937;
+  --color-border-accent: var(--color-brand-accent);
+
+  /* =====================
+  Icons
+  ===================== */
+  --color-icon-default: #9ca3af;
+  --color-icon-muted: #6b7280;
+  --color-icon-hover: #f9fafb;
+
+  /* =====================
+  States & Status
+  ===================== */
+  --color-state-success: #4ade80;
+  --color-state-warning: #f59e0b;
+  --color-state-error: #fb7185;
+  --color-state-info: #38bdf8;
+}
+
+/* ================================
+Semantic Tokens — Light Theme 
+================================ */
+.light-theme {
+  /* =====================
+  Text
+  ===================== */
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-text-inverse: #ffffff;
+
+  /* =====================
+  Background
+  ===================== */
+  --color-bg-body: #ffffff;
+  --color-bg-surface: #f3f4f6;
+  --color-bg-surface-alt: #e5e7eb;
+  --color-bg-header: rgba(255, 255, 255, 0.8);
+  --color-bg-overlay: rgba(0, 0, 0, 0.4);
+
+  /* =====================
+  Border
+  ===================== */
+  --color-border-default: #e5e7eb;
+  --color-border-muted: #d1d5db;
+
+  /* =====================
+  Icons
+  ===================== */
+  --color-icon-default: #6b7280;
+  --color-icon-hover: #111827;
+}
+
+/* =====================================================
+Component Tokens — Stack Pills
+===================================================== */
+:root {
+  /* Frontend */
+  --pill-frontend-text: #38bdf8;
+  --pill-frontend-bg: rgba(56, 189, 248, 0.1);
+  --pill-frontend-border: rgba(56, 189, 248, 0.2);
+
+  /* Backend */
+  --pill-backend-text: #4ade80;
+  --pill-backend-bg: rgba(74, 222, 128, 0.1);
+  --pill-backend-border: rgba(74, 222, 128, 0.2);
+
+  /* Database */
+  --pill-database-text: #f59e0b;
+  --pill-database-bg: rgba(245, 158, 11, 0.1);
+  --pill-database-border: rgba(245, 158, 11, 0.2);
+
+  /* DevOps */
+  --pill-devops-text: #fb7185;
+  --pill-devops-bg: rgba(251, 113, 133, 0.1);
+  --pill-devops-border: rgba(251, 113, 133, 0.2);
+
+  /* CMS */
+  --pill-cms-text: #f472b6;
+  --pill-cms-bg: rgba(244, 114, 182, 0.1);
+  --pill-cms-border: rgba(244, 114, 182, 0.2);
+}
+
+/* =====================================================
+Component Tokens — Stack Pills (Light Theme)
+===================================================== */
+.light-theme {
+  --pill-frontend-text: #2563eb;
+  --pill-frontend-bg: rgba(37, 99, 235, 0.1);
+  --pill-frontend-border: rgba(37, 99, 235, 0.2);
+
+  --pill-backend-text: #16a34a;
+  --pill-backend-bg: rgba(22, 163, 74, 0.1);
+  --pill-backend-border: rgba(22, 163, 74, 0.2);
+
+  --pill-database-text: #d97706;
+  --pill-database-bg: rgba(217, 119, 6, 0.1);
+  --pill-database-border: rgba(217, 119, 6, 0.2);
+
+  --pill-devops-text: #be123c;
+  --pill-devops-bg: rgba(190, 18, 60, 0.1);
+  --pill-devops-border: rgba(190, 18, 60, 0.2);
+
+  --pill-cms-text: #be185d;
+  --pill-cms-bg: rgba(236, 72, 153, 0.1);
+  --pill-cms-border: rgba(236, 72, 153, 0.2);
 }

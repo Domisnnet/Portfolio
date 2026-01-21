@@ -77,6 +77,22 @@ Root — Dark Theme
   --color-accent-rgb: 6, 182, 212;
   --color-bg-body-rgb: 17, 24, 39;
 
+  /* =====================================================
+    Component Tokens — Artifact Card-Dark
+  ===================================================== */
+  --artifact-bg-front: #ffffff;
+  --artifact-bg-back: #0a0f1c;
+
+  --artifact-text-front: #1a1a1a;
+  --artifact-text-back: #ffffff;
+  --artifact-text-muted: rgba(255, 255, 255, 0.7);
+
+  --artifact-accent: #00ffc8;
+  --artifact-accent-rgb: 0, 255, 200;
+
+  --artifact-border: rgba(0, 255, 200, 0.4);
+  --artifact-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
   /* =====================================
   Component Tokens — Stack Pills Dark
   ===================================== */
@@ -138,6 +154,21 @@ Light Theme — Overrides Only
   RGB Helpers
   ===================== */
   --color-bg-body-rgb: 255, 255, 255;
+
+  /* =====================================================
+    Component Tokens — Artifact Card-Light
+  ===================================================== */
+  /* background */
+  --artifact-bg-front: #ffffff;
+  --artifact-bg-back: #f3f4f6;
+
+  /* text */
+  --artifact-text-front: #1f2937;
+  --artifact-text-back: #111827;
+  --artifact-text-muted: rgba(0, 0, 0, 0.6);
+
+  /* border */
+  --artifact-border: rgba(0, 0, 0, 0.1);
 
   /* ======================================
   Component Tokens — Stack Pills Light

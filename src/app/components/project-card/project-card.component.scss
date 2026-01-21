@@ -8,12 +8,12 @@
 
 .artifact-card {
   width: 100%;
-  height: 460px; 
+  height: 460px;
   position: relative;
   perspective: 1200px;
 
-  &:hover { 
-    transition: transform 0.3s ease; 
+  &:hover {
+    transition: transform 0.3s ease;
 
     .alien-scan-marker {
       opacity: 1 !important;
@@ -30,52 +30,57 @@
   transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.artifact-card.is-flipped .artifact-inner { transform: rotateY(180deg); }
+.artifact-card.is-flipped .artifact-inner {
+  transform: rotateY(180deg);
+}
 
 /* ==================
-  Frente do Card
-================== */  
+  Faces
+================== */
 .artifact-face {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
   border-radius: 4px;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
+/* ==================
+  Frente
+================== */
 .artifact-front {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: #ffffff;
-  padding: 7px; 
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  background: var(--artifact-bg-front);
+  padding: 7px;
+  box-shadow: var(--artifact-shadow);
 
   .artifact-photo {
     width: 100%;
-    height: 280px; 
+    height: 280px;
     background: #000;
     position: relative;
     overflow: hidden;
     border-radius: 4px;
 
-    img { 
-      width: 100%; 
-      height: 100%; 
-      object-fit: cover; 
-      display: block; 
-      transition: transform 0.6s ease; 
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.6s ease;
     }
 
     .alien-scan-marker {
       position: absolute;
       top: 15px;
       right: 15px;
-      color: #00ffc8;
+      color: var(--artifact-accent);
       width: 24px;
       height: 24px;
-      filter: drop-shadow(0 0 5px #00ffc8);
-      opacity: 0; 
+      filter: drop-shadow(0 0 5px var(--artifact-accent));
+      opacity: 0;
       transition: all 0.4s ease;
       transform: scale(0.8);
       z-index: 2;
@@ -83,11 +88,11 @@
   }
 
   .handwritten-label {
-    margin-top: auto; 
+    margin-top: auto;
     padding-bottom: 8px;
-    font-family: 'Dancing Script', cursive !important;
+    font-family: var(--font-title);
     font-size: 1.45rem;
-    color: #1a1a1a;
+    color: var(--artifact-text-front);
     text-align: center;
     transform: rotate(-2deg);
     white-space: nowrap;
@@ -97,28 +102,34 @@
 }
 
 /* ==================
-  Verso do Card
-================== */  
+  Verso
+================== */
 .artifact-back {
-  background: #0a0f1c; 
+  background: var(--artifact-bg-back);
   transform: rotateY(180deg);
   padding: 30px;
   display: flex;
   flex-direction: column;
-  border: 1px solid rgba(0, 255, 200, 0.4);
-  box-shadow: inset 0 0 20px rgba(0, 255, 200, 0.1);
+  border: 1px solid var(--artifact-border);
+  box-shadow: inset 0 0 20px rgba(var(--artifact-accent-rgb), 0.1);
 
   .artifact-header {
     margin-bottom: 15px;
-    h3 { color: #fff; font-size: 1.1rem; margin: 0 0 8px; }
-    p { 
-      color: rgba(255, 255, 255, 0.7); 
-      font-size: 0.8rem; 
+
+    h3 {
+      color: var(--artifact-text-back);
+      font-size: 1.1rem;
+      margin: 0 0 8px;
+    }
+
+    p {
+      color: var(--artifact-text-muted);
+      font-size: 0.8rem;
       line-height: 1.4;
       display: -webkit-box;
       -webkit-box-orient: vertical;
-      -webkit-line-clamp: 3; 
-      line-clamp: 3; 
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
       overflow: hidden;
     }
   }
@@ -129,34 +140,45 @@
     gap: 6px;
     flex-grow: 1;
     align-content: flex-start;
-    overflow-y: auto; 
+    overflow-y: auto;
   }
 
   .artifact-action {
     margin-top: auto;
     padding-top: 15px;
+
     .artifact-button {
       display: block;
       width: 100%;
       padding: 10px;
       text-align: center;
-      color: #00ffc8;
-      border: 1px solid #00ffc8;
+      color: var(--artifact-accent);
+      border: 1px solid var(--artifact-accent);
       border-radius: 20px;
       text-decoration: none;
-      background: rgba(0, 255, 200, 0.05);
+      background: rgba(var(--artifact-accent-rgb), 0.05);
       font-weight: 600;
       font-size: 0.85rem;
       transition: all 0.3s ease;
-      &:hover { background: rgba(0, 255, 200, 0.2); box-shadow: 0 0 15px rgba(0, 255, 200, 0.3); }
+
+      &:hover {
+        background: rgba(var(--artifact-accent-rgb), 0.2);
+        box-shadow: 0 0 15px rgba(var(--artifact-accent-rgb), 0.3);
+      }
     }
   }
 }
 
-/* ===============
+/* ==================
   Animação
-=============== */  
+================== */
 @keyframes zeroGravity {
-  0%, 100% { transform: translateY(0) rotate(var(--rotation, 0deg)); }
-  50% { transform: translateY(-10px) rotate(calc(var(--rotation, 0deg) + 1deg)); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--rotation, 0deg));
+  }
+  50% {
+    transform: translateY(-10px)
+      rotate(calc(var(--rotation, 0deg) + 1deg));
+  }
 }

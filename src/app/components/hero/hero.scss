@@ -1,9 +1,9 @@
 /* ============================
-  Hero Section - Layout Geral
+  Hero Section — Layout Geral
 ============================ */
 .hero-section {
   padding: 6rem 0;
-  background-color: var(--background-color);
+  background-color: var(--color-bg-body);
   overflow: hidden;
 }
 
@@ -26,32 +26,33 @@
   .hero-title {
     font-size: 3.5rem;
     font-weight: 800;
-    color: var(--primary-color);
+    color: var(--color-text-accent);
     line-height: 1.2;
     margin-bottom: 1rem;
   }
 
   .hero-subtitle {
     font-size: 1.25rem;
-    color: var(--text-color-secondary);
+    color: var(--color-text-secondary);
     max-width: 600px;
     margin: 0 auto 2rem;
   }
 
   .cta-button {
     display: inline-block;
-    background-color: var(--primary-color);
-    color: #fff;
+    background-color: var(--color-accent);
+    color: var(--color-text-inverse);
     padding: 0.8rem 2rem;
     font-size: 1rem;
     font-weight: 600;
     border-radius: 8px;
     text-decoration: none;
-    transition: background-color 0.3s, transform 0.3s;
+    transition: background-color 0.3s ease, transform 0.3s ease,
+      box-shadow 0.3s ease;
 
     &:hover {
-      background-color: var(--secondary-color);
       transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(var(--color-accent-rgb), 0.35);
     }
   }
 }
@@ -70,7 +71,7 @@
 .shape {
   position: absolute;
   border-radius: 50%;
-  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient( 45deg, var(--color-primary), var(--color-secondary));
   opacity: 0.7;
   animation: float 6s ease-in-out infinite;
 }
@@ -104,13 +105,13 @@
 ========================= */
 @keyframes float {
   0% {
-    transform: translateY(0px);
+    transform: translateY(0);
   }
   50% {
     transform: translateY(-20px);
   }
   100% {
-    transform: translateY(0px);
+    transform: translateY(0);
   }
 }
 

@@ -1,1 +1,0 @@
-import{k as n}from"./chunk-CDSBP47I.js";import{Ka as o}from"./chunk-6QLXZF2D.js";var s=class e{static \u0275fac=function(t){return new(t||e)};static \u0275cmp=o({type:e,selectors:[["app-persistir"]],decls:0,vars:0,template:function(t,r){},dependencies:[n],encapsulation:2,changeDetection:0})};export{s as PersistirComponent};

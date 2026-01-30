@@ -6,7 +6,23 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './persistir.component.html',
-  styleUrl: './persistir.component.scss',
+  styleUrls: ['./persistir.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PersistirComponent {}
+export class PersistirComponent {
+  eggActive = false;
+  eggClicks = 0;
+
+  activateEasterEgg(event?: Event) {
+    this.eggClicks++;
+    const keyboardEvent = event as KeyboardEvent;
+    if (this.eggClicks >= 3 || keyboardEvent?.code === 'Space') {
+      this.eggActive = true;
+      this.eggClicks = 0;
+    }
+  }
+
+  ngOnDestroy() {
+    localStorage.setItem('domisdev-egg', 'activated');
+  }
+}

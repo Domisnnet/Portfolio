@@ -1,0 +1,1 @@
+import{k as n}from"./chunk-XJSWZ6ZQ.js";import{Ja as o}from"./chunk-CJLE5NWF.js";var s=class t{static \u0275fac=function(e){return new(e||t)};static \u0275cmp=o({type:t,selectors:[["app-github-stats"]],decls:0,vars:0,template:function(e,i){},dependencies:[n],encapsulation:2,changeDetection:0})};export{s as GithubStatsComponent};

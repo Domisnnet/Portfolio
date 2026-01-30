@@ -1,0 +1,1 @@
+import{k as n}from"./chunk-XJSWZ6ZQ.js";import{Ja as t}from"./chunk-CJLE5NWF.js";var a=class o{static \u0275fac=function(e){return new(e||o)};static \u0275cmp=t({type:o,selectors:[["app-producao"]],decls:0,vars:0,template:function(e,p){},dependencies:[n],encapsulation:2,changeDetection:0})};export{a as ProducaoComponent};

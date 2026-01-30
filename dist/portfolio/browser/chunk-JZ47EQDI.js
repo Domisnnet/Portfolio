@@ -1,0 +1,1 @@
+import{k as t}from"./chunk-XJSWZ6ZQ.js";import{Ja as o}from"./chunk-CJLE5NWF.js";var n=class e{static \u0275fac=function(a){return new(a||e)};static \u0275cmp=o({type:e,selectors:[["app-camadas"]],decls:0,vars:0,template:function(a,s){},dependencies:[t],encapsulation:2,changeDetection:0})};export{n as CamadasComponent};

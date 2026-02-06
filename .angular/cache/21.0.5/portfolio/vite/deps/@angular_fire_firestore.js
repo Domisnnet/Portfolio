@@ -1,28 +1,32 @@
-import "./chunk-6UGZHY6F.js";
 import {
-  EnvironmentInjector,
+  pendingUntilEvent
+} from "./chunk-NJUL6JGZ.js";
+import "./chunk-PGR32465.js";
+import {
   Inject,
   Injectable,
-  InjectionToken,
-  Injector,
   NgModule,
-  NgZone,
   Optional,
   PLATFORM_ID,
+  isDevMode,
+  setClassMetadata,
+  ɵɵdefineNgModule
+} from "./chunk-OAFCBCNS.js";
+import {
+  EnvironmentInjector,
+  InjectionToken,
+  Injector,
+  NgZone,
   PendingTasks,
   VERSION,
   Version,
-  assertInInjectionContext,
   inject,
-  isDevMode,
   makeEnvironmentProviders,
   runInInjectionContext,
-  setClassMetadata,
   ɵɵdefineInjectable,
   ɵɵdefineInjector,
-  ɵɵdefineNgModule,
   ɵɵinject
-} from "./chunk-Z3KONNDO.js";
+} from "./chunk-PX3YWRVP.js";
 import "./chunk-IONO6HLE.js";
 import {
   queueScheduler
@@ -2354,47 +2358,6 @@ registerCoreComponents("");
 var name2 = "firebase";
 var version2 = "11.10.0";
 registerVersion(name2, version2, "app");
-
-// node_modules/@angular/core/fesm2022/rxjs-interop.mjs
-function pendingUntilEvent(injector) {
-  if (injector === void 0) {
-    ngDevMode && assertInInjectionContext(pendingUntilEvent);
-    injector = inject(Injector);
-  }
-  const taskService = injector.get(PendingTasks);
-  return (sourceObservable) => {
-    return new Observable((originalSubscriber) => {
-      const removeTask = taskService.add();
-      let cleanedUp = false;
-      function cleanupTask() {
-        if (cleanedUp) {
-          return;
-        }
-        removeTask();
-        cleanedUp = true;
-      }
-      const innerSubscription = sourceObservable.subscribe({
-        next: (v2) => {
-          originalSubscriber.next(v2);
-          cleanupTask();
-        },
-        complete: () => {
-          originalSubscriber.complete();
-          cleanupTask();
-        },
-        error: (e) => {
-          originalSubscriber.error(e);
-          cleanupTask();
-        }
-      });
-      innerSubscription.add(() => {
-        originalSubscriber.unsubscribe();
-        cleanupTask();
-      });
-      return innerSubscription;
-    });
-  };
-}
 
 // node_modules/@angular/fire/fesm2022/angular-fire.mjs
 var VERSION2 = new Version("ANGULARFIRE2_VERSION");

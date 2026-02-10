@@ -1,4 +1,4 @@
-import{i as p}from"./chunk-CWOGUYHJ.js";import{Ha as r,ab as t,bb as i,cb as n,nb as e,ob as a,wa as m}from"./chunk-DVRMXTIM.js";var s=class d{appComponentCode=`@Component({
+import{i as p}from"./chunk-6ACWAJ6B.js";import{Ha as r,ab as t,bb as i,cb as n,nb as e,ob as a,wa as m}from"./chunk-64F4GMQB.js";var s=class d{appComponentCode=`@Component({
   standalone: true,
   imports: [StackPillComponent, HeroLayoutComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-angular',
@@ -8,45 +9,23 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   templateUrl: './angular.component.html',
   styleUrls: ['./angular.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+
+  animations: [
+    trigger('cardEnter', [
+      transition(':enter', [
+        style({
+          opacity: 0,
+          transform: 'translateY(16px) scale(0.98)'
+        }),
+        animate(
+          '320ms cubic-bezier(.2,.8,.2,1)',
+          style({
+            opacity: 1,
+            transform: 'translateY(0) scale(1)'
+          })
+        )
+      ])
+    ])
+  ]
 })
-export class AngularComponent {
-  appComponentCode = `@Component({
-  standalone: true,
-  imports: [StackPillComponent, HeroLayoutComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: \`
-    <app-hero-layout>
-      @for (tech of portfolioStack; track tech.name) {
-        <app-stack-pill 
-          [tag]="tech.name" 
-          [category]="tech.category">
-        </app-stack-pill>
-      }
-    </app-hero-layout>
-  \`
-  })
-  export class AppComponent {
-    portfolioStack = [
-      {name: 'Angular', category: 'core'},
-      {name: 'Firebase', category: 'backend'},
-      {name: 'SCSS', category: 'style'}
-    ];
-  }`;
-
-  stackPillComponentCode = `tag = input.required<string>();
-  category = input.required<PillCategory>();
-  isFlipped = signal(false);
-  pillConfig = computed(() => {
-    const config = TAG_CONFIG[this.tag()] ?? {
-      label: this.tag(),
-      iconPath: \`assets/icons/\${this.tag().toLowerCase()}.svg\`,
-      category: 'frontend' as const
-    };
-    return config;
-  });
-
-  flipPill() {
-    this.isFlipped.update(flipped => !flipped);
-    // Animation trigger
-  }`;
-}
+export class AngularComponent {}

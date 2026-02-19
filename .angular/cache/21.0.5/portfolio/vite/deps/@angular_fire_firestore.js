@@ -1,64 +1,899 @@
 import {
-  pendingUntilEvent
-} from "./chunk-NJUL6JGZ.js";
-import "./chunk-PGR32465.js";
+  Component,
+  Deferred,
+  ErrorFactory,
+  FirebaseApp,
+  FirebaseApps,
+  FirebaseError,
+  LogLevel,
+  Logger,
+  SDK_VERSION,
+  VERSION,
+  _getProvider,
+  _isFirebaseServerApp,
+  _registerComponent,
+  _removeServiceInstance,
+  base64,
+  base64Decode,
+  createMockUserToken,
+  createSubscribe,
+  deepEqual,
+  extractQuerystring,
+  getApp,
+  getDefaultEmulatorHost,
+  getDefaultEmulatorHostnameAndPort,
+  getExperimentalSetting,
+  getGlobal,
+  getModularInstance,
+  getUA,
+  isBrowserExtension,
+  isCloudWorkstation,
+  isCloudflareWorker,
+  isEmpty,
+  isIE,
+  isIndexedDBAvailable,
+  isMobileCordova,
+  isReactNative,
+  isSafari,
+  isSafariOrWebkit,
+  openDB,
+  pingServer,
+  querystring,
+  querystringDecode,
+  registerVersion,
+  updateEmulatorBanner,
+  ɵAngularFireSchedulers,
+  ɵgetAllInstancesOf,
+  ɵgetDefaultInstanceOf,
+  ɵzoneWrap
+} from "./chunk-CWGID4WA.js";
+import "./chunk-NJUL6JGZ.js";
+import "./chunk-OWHBB2EO.js";
+import "./chunk-WEF4QUTM.js";
 import {
-  Inject,
-  Injectable,
   NgModule,
   Optional,
   PLATFORM_ID,
-  isDevMode,
   setClassMetadata,
   ɵɵdefineNgModule
 } from "./chunk-OAFCBCNS.js";
 import {
-  EnvironmentInjector,
   InjectionToken,
   Injector,
   NgZone,
-  PendingTasks,
-  VERSION,
-  Version,
-  inject,
   makeEnvironmentProviders,
-  runInInjectionContext,
-  ɵɵdefineInjectable,
-  ɵɵdefineInjector,
-  ɵɵinject
+  ɵɵdefineInjector
 } from "./chunk-PX3YWRVP.js";
+import "./chunk-OSECCFIU.js";
 import "./chunk-IONO6HLE.js";
-import {
-  queueScheduler
-} from "./chunk-OSECCFIU.js";
 import {
   Observable,
   __objRest,
   __rest,
   __spreadProps,
   __spreadValues,
-  asyncScheduler,
   concatMap,
   distinct,
   distinctUntilChanged,
   filter,
   from,
   map,
-  observeOn,
   of,
   pairwise,
   pipe,
   scan,
   startWith,
-  subscribeOn,
   switchMap,
   timer
 } from "./chunk-PHHPLELC.js";
 
-// node_modules/@angular/fire/node_modules/@firebase/util/dist/postinstall.mjs
+// node_modules/@angular/fire/node_modules/@firebase/app-check/dist/esm/index.esm2017.js
+var APP_CHECK_STATES = /* @__PURE__ */ new Map();
+var DEFAULT_STATE = {
+  activated: false,
+  tokenObservers: []
+};
+var DEBUG_STATE = {
+  initialized: false,
+  enabled: false
+};
+function getStateReference(app) {
+  return APP_CHECK_STATES.get(app) || Object.assign({}, DEFAULT_STATE);
+}
+function setInitialState(app, state) {
+  APP_CHECK_STATES.set(app, state);
+  return APP_CHECK_STATES.get(app);
+}
+function getDebugState() {
+  return DEBUG_STATE;
+}
+var BASE_ENDPOINT = "https://content-firebaseappcheck.googleapis.com/v1";
+var EXCHANGE_DEBUG_TOKEN_METHOD = "exchangeDebugToken";
+var TOKEN_REFRESH_TIME = {
+  /**
+   * The offset time before token natural expiration to run the refresh.
+   * This is currently 5 minutes.
+   */
+  OFFSET_DURATION: 5 * 60 * 1e3,
+  /**
+   * This is the first retrial wait after an error. This is currently
+   * 30 seconds.
+   */
+  RETRIAL_MIN_WAIT: 30 * 1e3,
+  /**
+   * This is the maximum retrial wait, currently 16 minutes.
+   */
+  RETRIAL_MAX_WAIT: 16 * 60 * 1e3
+};
+var ONE_DAY = 24 * 60 * 60 * 1e3;
+var Refresher = class {
+  constructor(operation, retryPolicy, getWaitDuration, lowerBound, upperBound) {
+    this.operation = operation;
+    this.retryPolicy = retryPolicy;
+    this.getWaitDuration = getWaitDuration;
+    this.lowerBound = lowerBound;
+    this.upperBound = upperBound;
+    this.pending = null;
+    this.nextErrorWaitInterval = lowerBound;
+    if (lowerBound > upperBound) {
+      throw new Error("Proactive refresh lower bound greater than upper bound!");
+    }
+  }
+  start() {
+    this.nextErrorWaitInterval = this.lowerBound;
+    this.process(true).catch(() => {
+    });
+  }
+  stop() {
+    if (this.pending) {
+      this.pending.reject("cancelled");
+      this.pending = null;
+    }
+  }
+  isRunning() {
+    return !!this.pending;
+  }
+  async process(hasSucceeded) {
+    this.stop();
+    try {
+      this.pending = new Deferred();
+      this.pending.promise.catch((_e3) => {
+      });
+      await sleep(this.getNextRun(hasSucceeded));
+      this.pending.resolve();
+      await this.pending.promise;
+      this.pending = new Deferred();
+      this.pending.promise.catch((_e3) => {
+      });
+      await this.operation();
+      this.pending.resolve();
+      await this.pending.promise;
+      this.process(true).catch(() => {
+      });
+    } catch (error) {
+      if (this.retryPolicy(error)) {
+        this.process(false).catch(() => {
+        });
+      } else {
+        this.stop();
+      }
+    }
+  }
+  getNextRun(hasSucceeded) {
+    if (hasSucceeded) {
+      this.nextErrorWaitInterval = this.lowerBound;
+      return this.getWaitDuration();
+    } else {
+      const currentErrorWaitInterval = this.nextErrorWaitInterval;
+      this.nextErrorWaitInterval *= 2;
+      if (this.nextErrorWaitInterval > this.upperBound) {
+        this.nextErrorWaitInterval = this.upperBound;
+      }
+      return currentErrorWaitInterval;
+    }
+  }
+};
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+var ERRORS = {
+  [
+    "already-initialized"
+    /* AppCheckError.ALREADY_INITIALIZED */
+  ]: "You have already called initializeAppCheck() for FirebaseApp {$appName} with different options. To avoid this error, call initializeAppCheck() with the same options as when it was originally called. This will return the already initialized instance.",
+  [
+    "use-before-activation"
+    /* AppCheckError.USE_BEFORE_ACTIVATION */
+  ]: "App Check is being used before initializeAppCheck() is called for FirebaseApp {$appName}. Call initializeAppCheck() before instantiating other Firebase services.",
+  [
+    "fetch-network-error"
+    /* AppCheckError.FETCH_NETWORK_ERROR */
+  ]: "Fetch failed to connect to a network. Check Internet connection. Original error: {$originalErrorMessage}.",
+  [
+    "fetch-parse-error"
+    /* AppCheckError.FETCH_PARSE_ERROR */
+  ]: "Fetch client could not parse response. Original error: {$originalErrorMessage}.",
+  [
+    "fetch-status-error"
+    /* AppCheckError.FETCH_STATUS_ERROR */
+  ]: "Fetch server returned an HTTP error status. HTTP status: {$httpStatus}.",
+  [
+    "storage-open"
+    /* AppCheckError.STORAGE_OPEN */
+  ]: "Error thrown when opening storage. Original error: {$originalErrorMessage}.",
+  [
+    "storage-get"
+    /* AppCheckError.STORAGE_GET */
+  ]: "Error thrown when reading from storage. Original error: {$originalErrorMessage}.",
+  [
+    "storage-set"
+    /* AppCheckError.STORAGE_WRITE */
+  ]: "Error thrown when writing to storage. Original error: {$originalErrorMessage}.",
+  [
+    "recaptcha-error"
+    /* AppCheckError.RECAPTCHA_ERROR */
+  ]: "ReCAPTCHA error.",
+  [
+    "initial-throttle"
+    /* AppCheckError.INITIAL_THROTTLE */
+  ]: `{$httpStatus} error. Attempts allowed again after {$time}`,
+  [
+    "throttled"
+    /* AppCheckError.THROTTLED */
+  ]: `Requests throttled due to previous {$httpStatus} error. Attempts allowed again after {$time}`
+};
+var ERROR_FACTORY = new ErrorFactory("appCheck", "AppCheck", ERRORS);
+function ensureActivated(app) {
+  if (!getStateReference(app).activated) {
+    throw ERROR_FACTORY.create("use-before-activation", {
+      appName: app.name
+    });
+  }
+}
+async function exchangeToken({ url, body }, heartbeatServiceProvider) {
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  const heartbeatService = heartbeatServiceProvider.getImmediate({
+    optional: true
+  });
+  if (heartbeatService) {
+    const heartbeatsHeader = await heartbeatService.getHeartbeatsHeader();
+    if (heartbeatsHeader) {
+      headers["X-Firebase-Client"] = heartbeatsHeader;
+    }
+  }
+  const options = {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers
+  };
+  let response;
+  try {
+    response = await fetch(url, options);
+  } catch (originalError) {
+    throw ERROR_FACTORY.create("fetch-network-error", {
+      originalErrorMessage: originalError === null || originalError === void 0 ? void 0 : originalError.message
+    });
+  }
+  if (response.status !== 200) {
+    throw ERROR_FACTORY.create("fetch-status-error", {
+      httpStatus: response.status
+    });
+  }
+  let responseBody;
+  try {
+    responseBody = await response.json();
+  } catch (originalError) {
+    throw ERROR_FACTORY.create("fetch-parse-error", {
+      originalErrorMessage: originalError === null || originalError === void 0 ? void 0 : originalError.message
+    });
+  }
+  const match = responseBody.ttl.match(/^([\d.]+)(s)$/);
+  if (!match || !match[2] || isNaN(Number(match[1]))) {
+    throw ERROR_FACTORY.create("fetch-parse-error", {
+      originalErrorMessage: `ttl field (timeToLive) is not in standard Protobuf Duration format: ${responseBody.ttl}`
+    });
+  }
+  const timeToLiveAsNumber = Number(match[1]) * 1e3;
+  const now = Date.now();
+  return {
+    token: responseBody.token,
+    expireTimeMillis: now + timeToLiveAsNumber,
+    issuedAtTimeMillis: now
+  };
+}
+function getExchangeDebugTokenRequest(app, debugToken) {
+  const { projectId, appId, apiKey } = app.options;
+  return {
+    url: `${BASE_ENDPOINT}/projects/${projectId}/apps/${appId}:${EXCHANGE_DEBUG_TOKEN_METHOD}?key=${apiKey}`,
+    body: {
+      // eslint-disable-next-line
+      debug_token: debugToken
+    }
+  };
+}
+var DB_NAME = "firebase-app-check-database";
+var DB_VERSION = 1;
+var STORE_NAME = "firebase-app-check-store";
+var DEBUG_TOKEN_KEY = "debug-token";
+var dbPromise = null;
+function getDBPromise() {
+  if (dbPromise) {
+    return dbPromise;
+  }
+  dbPromise = new Promise((resolve, reject) => {
+    try {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onsuccess = (event) => {
+        resolve(event.target.result);
+      };
+      request.onerror = (event) => {
+        var _a;
+        reject(ERROR_FACTORY.create("storage-open", {
+          originalErrorMessage: (_a = event.target.error) === null || _a === void 0 ? void 0 : _a.message
+        }));
+      };
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        switch (event.oldVersion) {
+          case 0:
+            db.createObjectStore(STORE_NAME, {
+              keyPath: "compositeKey"
+            });
+        }
+      };
+    } catch (e) {
+      reject(ERROR_FACTORY.create("storage-open", {
+        originalErrorMessage: e === null || e === void 0 ? void 0 : e.message
+      }));
+    }
+  });
+  return dbPromise;
+}
+function readTokenFromIndexedDB(app) {
+  return read(computeKey(app));
+}
+function writeTokenToIndexedDB(app, token) {
+  return write(computeKey(app), token);
+}
+function writeDebugTokenToIndexedDB(token) {
+  return write(DEBUG_TOKEN_KEY, token);
+}
+function readDebugTokenFromIndexedDB() {
+  return read(DEBUG_TOKEN_KEY);
+}
+async function write(key, value) {
+  const db = await getDBPromise();
+  const transaction = db.transaction(STORE_NAME, "readwrite");
+  const store = transaction.objectStore(STORE_NAME);
+  const request = store.put({
+    compositeKey: key,
+    value
+  });
+  return new Promise((resolve, reject) => {
+    request.onsuccess = (_event) => {
+      resolve();
+    };
+    transaction.onerror = (event) => {
+      var _a;
+      reject(ERROR_FACTORY.create("storage-set", {
+        originalErrorMessage: (_a = event.target.error) === null || _a === void 0 ? void 0 : _a.message
+      }));
+    };
+  });
+}
+async function read(key) {
+  const db = await getDBPromise();
+  const transaction = db.transaction(STORE_NAME, "readonly");
+  const store = transaction.objectStore(STORE_NAME);
+  const request = store.get(key);
+  return new Promise((resolve, reject) => {
+    request.onsuccess = (event) => {
+      const result = event.target.result;
+      if (result) {
+        resolve(result.value);
+      } else {
+        resolve(void 0);
+      }
+    };
+    transaction.onerror = (event) => {
+      var _a;
+      reject(ERROR_FACTORY.create("storage-get", {
+        originalErrorMessage: (_a = event.target.error) === null || _a === void 0 ? void 0 : _a.message
+      }));
+    };
+  });
+}
+function computeKey(app) {
+  return `${app.options.appId}-${app.name}`;
+}
+var logger = new Logger("@firebase/app-check");
+async function readTokenFromStorage(app) {
+  if (isIndexedDBAvailable()) {
+    let token = void 0;
+    try {
+      token = await readTokenFromIndexedDB(app);
+    } catch (e) {
+      logger.warn(`Failed to read token from IndexedDB. Error: ${e}`);
+    }
+    return token;
+  }
+  return void 0;
+}
+function writeTokenToStorage(app, token) {
+  if (isIndexedDBAvailable()) {
+    return writeTokenToIndexedDB(app, token).catch((e) => {
+      logger.warn(`Failed to write token to IndexedDB. Error: ${e}`);
+    });
+  }
+  return Promise.resolve();
+}
+async function readOrCreateDebugTokenFromStorage() {
+  let existingDebugToken = void 0;
+  try {
+    existingDebugToken = await readDebugTokenFromIndexedDB();
+  } catch (_e3) {
+  }
+  if (!existingDebugToken) {
+    const newToken = crypto.randomUUID();
+    writeDebugTokenToIndexedDB(newToken).catch((e) => logger.warn(`Failed to persist debug token to IndexedDB. Error: ${e}`));
+    return newToken;
+  } else {
+    return existingDebugToken;
+  }
+}
+function isDebugMode() {
+  const debugState = getDebugState();
+  return debugState.enabled;
+}
+async function getDebugToken() {
+  const state = getDebugState();
+  if (state.enabled && state.token) {
+    return state.token.promise;
+  } else {
+    throw Error(`
+            Can't get debug token in production mode.
+        `);
+  }
+}
+function initializeDebugMode() {
+  const globals = getGlobal();
+  const debugState = getDebugState();
+  debugState.initialized = true;
+  if (typeof globals.FIREBASE_APPCHECK_DEBUG_TOKEN !== "string" && globals.FIREBASE_APPCHECK_DEBUG_TOKEN !== true) {
+    return;
+  }
+  debugState.enabled = true;
+  const deferredToken = new Deferred();
+  debugState.token = deferredToken;
+  if (typeof globals.FIREBASE_APPCHECK_DEBUG_TOKEN === "string") {
+    deferredToken.resolve(globals.FIREBASE_APPCHECK_DEBUG_TOKEN);
+  } else {
+    deferredToken.resolve(readOrCreateDebugTokenFromStorage());
+  }
+}
+var defaultTokenErrorData = { error: "UNKNOWN_ERROR" };
+function formatDummyToken(tokenErrorData) {
+  return base64.encodeString(
+    JSON.stringify(tokenErrorData),
+    /* webSafe= */
+    false
+  );
+}
+async function getToken$2(appCheck, forceRefresh = false, shouldLogErrors = false) {
+  const app = appCheck.app;
+  ensureActivated(app);
+  const state = getStateReference(app);
+  let token = state.token;
+  let error = void 0;
+  if (token && !isValid(token)) {
+    state.token = void 0;
+    token = void 0;
+  }
+  if (!token) {
+    const cachedToken = await state.cachedTokenPromise;
+    if (cachedToken) {
+      if (isValid(cachedToken)) {
+        token = cachedToken;
+      } else {
+        await writeTokenToStorage(app, void 0);
+      }
+    }
+  }
+  if (!forceRefresh && token && isValid(token)) {
+    return {
+      token: token.token
+    };
+  }
+  let shouldCallListeners = false;
+  if (isDebugMode()) {
+    try {
+      if (!state.exchangeTokenPromise) {
+        state.exchangeTokenPromise = exchangeToken(getExchangeDebugTokenRequest(app, await getDebugToken()), appCheck.heartbeatServiceProvider).finally(() => {
+          state.exchangeTokenPromise = void 0;
+        });
+        shouldCallListeners = true;
+      }
+      const tokenFromDebugExchange = await state.exchangeTokenPromise;
+      await writeTokenToStorage(app, tokenFromDebugExchange);
+      state.token = tokenFromDebugExchange;
+      return { token: tokenFromDebugExchange.token };
+    } catch (e) {
+      if (e.code === `appCheck/${"throttled"}` || e.code === `appCheck/${"initial-throttle"}`) {
+        logger.warn(e.message);
+      } else if (shouldLogErrors) {
+        logger.error(e);
+      }
+      return makeDummyTokenResult(e);
+    }
+  }
+  try {
+    if (!state.exchangeTokenPromise) {
+      state.exchangeTokenPromise = state.provider.getToken().finally(() => {
+        state.exchangeTokenPromise = void 0;
+      });
+      shouldCallListeners = true;
+    }
+    token = await getStateReference(app).exchangeTokenPromise;
+  } catch (e) {
+    if (e.code === `appCheck/${"throttled"}` || e.code === `appCheck/${"initial-throttle"}`) {
+      logger.warn(e.message);
+    } else if (shouldLogErrors) {
+      logger.error(e);
+    }
+    error = e;
+  }
+  let interopTokenResult;
+  if (!token) {
+    interopTokenResult = makeDummyTokenResult(error);
+  } else if (error) {
+    if (isValid(token)) {
+      interopTokenResult = {
+        token: token.token,
+        internalError: error
+      };
+    } else {
+      interopTokenResult = makeDummyTokenResult(error);
+    }
+  } else {
+    interopTokenResult = {
+      token: token.token
+    };
+    state.token = token;
+    await writeTokenToStorage(app, token);
+  }
+  if (shouldCallListeners) {
+    notifyTokenListeners(app, interopTokenResult);
+  }
+  return interopTokenResult;
+}
+async function getLimitedUseToken$1(appCheck) {
+  const app = appCheck.app;
+  ensureActivated(app);
+  const { provider } = getStateReference(app);
+  if (isDebugMode()) {
+    const debugToken = await getDebugToken();
+    const { token } = await exchangeToken(getExchangeDebugTokenRequest(app, debugToken), appCheck.heartbeatServiceProvider);
+    return { token };
+  } else {
+    const { token } = await provider.getToken();
+    return { token };
+  }
+}
+function addTokenListener(appCheck, type, listener, onError) {
+  const { app } = appCheck;
+  const state = getStateReference(app);
+  const tokenObserver = {
+    next: listener,
+    error: onError,
+    type
+  };
+  state.tokenObservers = [...state.tokenObservers, tokenObserver];
+  if (state.token && isValid(state.token)) {
+    const validToken = state.token;
+    Promise.resolve().then(() => {
+      listener({ token: validToken.token });
+      initTokenRefresher(appCheck);
+    }).catch(() => {
+    });
+  }
+  void state.cachedTokenPromise.then(() => initTokenRefresher(appCheck));
+}
+function removeTokenListener(app, listener) {
+  const state = getStateReference(app);
+  const newObservers = state.tokenObservers.filter((tokenObserver) => tokenObserver.next !== listener);
+  if (newObservers.length === 0 && state.tokenRefresher && state.tokenRefresher.isRunning()) {
+    state.tokenRefresher.stop();
+  }
+  state.tokenObservers = newObservers;
+}
+function initTokenRefresher(appCheck) {
+  const { app } = appCheck;
+  const state = getStateReference(app);
+  let refresher = state.tokenRefresher;
+  if (!refresher) {
+    refresher = createTokenRefresher(appCheck);
+    state.tokenRefresher = refresher;
+  }
+  if (!refresher.isRunning() && state.isTokenAutoRefreshEnabled) {
+    refresher.start();
+  }
+}
+function createTokenRefresher(appCheck) {
+  const { app } = appCheck;
+  return new Refresher(
+    // Keep in mind when this fails for any reason other than the ones
+    // for which we should retry, it will effectively stop the proactive refresh.
+    async () => {
+      const state = getStateReference(app);
+      let result;
+      if (!state.token) {
+        result = await getToken$2(appCheck);
+      } else {
+        result = await getToken$2(appCheck, true);
+      }
+      if (result.error) {
+        throw result.error;
+      }
+      if (result.internalError) {
+        throw result.internalError;
+      }
+    },
+    () => {
+      return true;
+    },
+    () => {
+      const state = getStateReference(app);
+      if (state.token) {
+        let nextRefreshTimeMillis = state.token.issuedAtTimeMillis + (state.token.expireTimeMillis - state.token.issuedAtTimeMillis) * 0.5 + 5 * 60 * 1e3;
+        const latestAllowableRefresh = state.token.expireTimeMillis - 5 * 60 * 1e3;
+        nextRefreshTimeMillis = Math.min(nextRefreshTimeMillis, latestAllowableRefresh);
+        return Math.max(0, nextRefreshTimeMillis - Date.now());
+      } else {
+        return 0;
+      }
+    },
+    TOKEN_REFRESH_TIME.RETRIAL_MIN_WAIT,
+    TOKEN_REFRESH_TIME.RETRIAL_MAX_WAIT
+  );
+}
+function notifyTokenListeners(app, token) {
+  const observers = getStateReference(app).tokenObservers;
+  for (const observer of observers) {
+    try {
+      if (observer.type === "EXTERNAL" && token.error != null) {
+        observer.error(token.error);
+      } else {
+        observer.next(token);
+      }
+    } catch (e) {
+    }
+  }
+}
+function isValid(token) {
+  return token.expireTimeMillis - Date.now() > 0;
+}
+function makeDummyTokenResult(error) {
+  return {
+    token: formatDummyToken(defaultTokenErrorData),
+    error
+  };
+}
+var AppCheckService = class {
+  constructor(app, heartbeatServiceProvider) {
+    this.app = app;
+    this.heartbeatServiceProvider = heartbeatServiceProvider;
+  }
+  _delete() {
+    const { tokenObservers } = getStateReference(this.app);
+    for (const tokenObserver of tokenObservers) {
+      removeTokenListener(this.app, tokenObserver.next);
+    }
+    return Promise.resolve();
+  }
+};
+function factory(app, heartbeatServiceProvider) {
+  return new AppCheckService(app, heartbeatServiceProvider);
+}
+function internalFactory(appCheck) {
+  return {
+    getToken: (forceRefresh) => getToken$2(appCheck, forceRefresh),
+    getLimitedUseToken: () => getLimitedUseToken$1(appCheck),
+    addTokenListener: (listener) => addTokenListener(appCheck, "INTERNAL", listener),
+    removeTokenListener: (listener) => removeTokenListener(appCheck.app, listener)
+  };
+}
+var name = "@firebase/app-check";
+var version = "0.10.1";
+function initializeAppCheck(app = getApp(), options) {
+  app = getModularInstance(app);
+  const provider = _getProvider(app, "app-check");
+  if (!getDebugState().initialized) {
+    initializeDebugMode();
+  }
+  if (isDebugMode()) {
+    void getDebugToken().then((token) => (
+      // Not using logger because I don't think we ever want this accidentally hidden.
+      console.log(`App Check debug token: ${token}. You will need to add it to your app's App Check settings in the Firebase console for it to work.`)
+    ));
+  }
+  if (provider.isInitialized()) {
+    const existingInstance = provider.getImmediate();
+    const initialOptions = provider.getOptions();
+    if (initialOptions.isTokenAutoRefreshEnabled === options.isTokenAutoRefreshEnabled && initialOptions.provider.isEqual(options.provider)) {
+      return existingInstance;
+    } else {
+      throw ERROR_FACTORY.create("already-initialized", {
+        appName: app.name
+      });
+    }
+  }
+  const appCheck = provider.initialize({ options });
+  _activate(app, options.provider, options.isTokenAutoRefreshEnabled);
+  if (getStateReference(app).isTokenAutoRefreshEnabled) {
+    addTokenListener(appCheck, "INTERNAL", () => {
+    });
+  }
+  return appCheck;
+}
+function _activate(app, provider, isTokenAutoRefreshEnabled = false) {
+  const state = setInitialState(app, Object.assign({}, DEFAULT_STATE));
+  state.activated = true;
+  state.provider = provider;
+  state.cachedTokenPromise = readTokenFromStorage(app).then((cachedToken) => {
+    if (cachedToken && isValid(cachedToken)) {
+      state.token = cachedToken;
+      notifyTokenListeners(app, { token: cachedToken.token });
+    }
+    return cachedToken;
+  });
+  state.isTokenAutoRefreshEnabled = isTokenAutoRefreshEnabled && app.automaticDataCollectionEnabled;
+  if (!app.automaticDataCollectionEnabled && isTokenAutoRefreshEnabled) {
+    logger.warn("`isTokenAutoRefreshEnabled` is true but `automaticDataCollectionEnabled` was set to false during `initializeApp()`. This blocks automatic token refresh.");
+  }
+  state.provider.initialize(app);
+}
+function setTokenAutoRefreshEnabled(appCheckInstance, isTokenAutoRefreshEnabled) {
+  const app = appCheckInstance.app;
+  const state = getStateReference(app);
+  if (state.tokenRefresher) {
+    if (isTokenAutoRefreshEnabled === true) {
+      state.tokenRefresher.start();
+    } else {
+      state.tokenRefresher.stop();
+    }
+  }
+  state.isTokenAutoRefreshEnabled = isTokenAutoRefreshEnabled;
+}
+async function getToken(appCheckInstance, forceRefresh) {
+  const result = await getToken$2(appCheckInstance, forceRefresh);
+  if (result.error) {
+    throw result.error;
+  }
+  if (result.internalError) {
+    throw result.internalError;
+  }
+  return { token: result.token };
+}
+function getLimitedUseToken(appCheckInstance) {
+  return getLimitedUseToken$1(appCheckInstance);
+}
+function onTokenChanged(appCheckInstance, onNextOrObserver, onError, onCompletion) {
+  let nextFn = () => {
+  };
+  let errorFn = () => {
+  };
+  if (onNextOrObserver.next != null) {
+    nextFn = onNextOrObserver.next.bind(onNextOrObserver);
+  } else {
+    nextFn = onNextOrObserver;
+  }
+  if (onNextOrObserver.error != null) {
+    errorFn = onNextOrObserver.error.bind(onNextOrObserver);
+  } else if (onError) {
+    errorFn = onError;
+  }
+  addTokenListener(appCheckInstance, "EXTERNAL", nextFn, errorFn);
+  return () => removeTokenListener(appCheckInstance.app, nextFn);
+}
+var APP_CHECK_NAME = "app-check";
+var APP_CHECK_NAME_INTERNAL = "app-check-internal";
+function registerAppCheck() {
+  _registerComponent(new Component(
+    APP_CHECK_NAME,
+    (container) => {
+      const app = container.getProvider("app").getImmediate();
+      const heartbeatServiceProvider = container.getProvider("heartbeat");
+      return factory(app, heartbeatServiceProvider);
+    },
+    "PUBLIC"
+    /* ComponentType.PUBLIC */
+  ).setInstantiationMode(
+    "EXPLICIT"
+    /* InstantiationMode.EXPLICIT */
+  ).setInstanceCreatedCallback((container, _identifier, _appcheckService) => {
+    container.getProvider(APP_CHECK_NAME_INTERNAL).initialize();
+  }));
+  _registerComponent(new Component(
+    APP_CHECK_NAME_INTERNAL,
+    (container) => {
+      const appCheck = container.getProvider("app-check").getImmediate();
+      return internalFactory(appCheck);
+    },
+    "PUBLIC"
+    /* ComponentType.PUBLIC */
+  ).setInstantiationMode(
+    "EXPLICIT"
+    /* InstantiationMode.EXPLICIT */
+  ));
+  registerVersion(name, version);
+}
+registerAppCheck();
+
+// node_modules/@angular/fire/fesm2022/angular-fire-app-check.mjs
+var APP_CHECK_PROVIDER_NAME = "app-check";
+var AppCheck = class {
+  constructor(appCheck) {
+    return appCheck;
+  }
+};
+var AppCheckInstances = class {
+  constructor() {
+    return ɵgetAllInstancesOf(APP_CHECK_PROVIDER_NAME);
+  }
+};
+var appCheckInstance$ = timer(0, 300).pipe(concatMap(() => from(ɵgetAllInstancesOf(APP_CHECK_PROVIDER_NAME))), distinct());
+var PROVIDED_APP_CHECK_INSTANCES = new InjectionToken("angularfire2.app-check-instances");
+function defaultAppCheckInstanceFactory(provided, defaultApp) {
+  const defaultAppCheck = ɵgetDefaultInstanceOf(APP_CHECK_PROVIDER_NAME, provided, defaultApp);
+  return defaultAppCheck && new AppCheck(defaultAppCheck);
+}
+var LOCALHOSTS = ["localhost", "0.0.0.0", "127.0.0.1"];
+var isLocalhost = typeof window !== "undefined" && LOCALHOSTS.includes(window.location.hostname);
+var APP_CHECK_INSTANCES_PROVIDER = {
+  provide: AppCheckInstances,
+  deps: [[new Optional(), PROVIDED_APP_CHECK_INSTANCES]]
+};
+var DEFAULT_APP_CHECK_INSTANCE_PROVIDER = {
+  provide: AppCheck,
+  useFactory: defaultAppCheckInstanceFactory,
+  deps: [[new Optional(), PROVIDED_APP_CHECK_INSTANCES], FirebaseApp, PLATFORM_ID]
+};
+var AppCheckModule = class _AppCheckModule {
+  constructor() {
+    registerVersion("angularfire", VERSION.full, "app-check");
+  }
+  static ɵfac = function AppCheckModule_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AppCheckModule)();
+  };
+  static ɵmod = ɵɵdefineNgModule({
+    type: _AppCheckModule
+  });
+  static ɵinj = ɵɵdefineInjector({
+    providers: [DEFAULT_APP_CHECK_INSTANCE_PROVIDER, APP_CHECK_INSTANCES_PROVIDER]
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AppCheckModule, [{
+    type: NgModule,
+    args: [{
+      providers: [DEFAULT_APP_CHECK_INSTANCE_PROVIDER, APP_CHECK_INSTANCES_PROVIDER]
+    }]
+  }], () => [], null);
+})();
+var getLimitedUseToken2 = ɵzoneWrap(getLimitedUseToken, true, 2);
+var getToken2 = ɵzoneWrap(getToken, true);
+var initializeAppCheck2 = ɵzoneWrap(initializeAppCheck, true);
+var onTokenChanged2 = ɵzoneWrap(onTokenChanged, true);
+var setTokenAutoRefreshEnabled2 = ɵzoneWrap(setTokenAutoRefreshEnabled, true);
+
+// node_modules/@firebase/util/dist/postinstall.mjs
 var getDefaultsFromPostinstall = () => void 0;
 
-// node_modules/@angular/fire/node_modules/@firebase/util/dist/index.esm2017.js
+// node_modules/@firebase/util/dist/index.esm.js
 var stringToByteArray$1 = function(str) {
   const out = [];
   let p = 0;
@@ -108,7 +943,7 @@ var byteArrayToString = function(bytes) {
   }
   return out.join("");
 };
-var base64 = {
+var base642 = {
   /**
    * Maps bytes to characters.
    */
@@ -294,20 +1129,20 @@ var DecodeBase64StringError = class extends Error {
 };
 var base64Encode = function(str) {
   const utf8Bytes = stringToByteArray$1(str);
-  return base64.encodeByteArray(utf8Bytes, true);
+  return base642.encodeByteArray(utf8Bytes, true);
 };
 var base64urlEncodeWithoutPadding = function(str) {
   return base64Encode(str).replace(/\./g, "");
 };
-var base64Decode = function(str) {
+var base64Decode2 = function(str) {
   try {
-    return base64.decodeString(str, true);
+    return base642.decodeString(str, true);
   } catch (e) {
     console.error("base64Decode failed: ", e);
   }
   return null;
 };
-function getGlobal() {
+function getGlobal2() {
   if (typeof self !== "undefined") {
     return self;
   }
@@ -319,7 +1154,7 @@ function getGlobal() {
   }
   throw new Error("Unable to locate global object.");
 }
-var getDefaultsFromGlobal = () => getGlobal().__FIREBASE_DEFAULTS__;
+var getDefaultsFromGlobal = () => getGlobal2().__FIREBASE_DEFAULTS__;
 var getDefaultsFromEnvVariable = () => {
   if (typeof process === "undefined" || typeof process.env === "undefined") {
     return;
@@ -339,7 +1174,7 @@ var getDefaultsFromCookie = () => {
   } catch (e) {
     return;
   }
-  const decoded = match && base64Decode(match[1]);
+  const decoded = match && base64Decode2(match[1]);
   return decoded && JSON.parse(decoded);
 };
 var getDefaults = () => {
@@ -350,261 +1185,29 @@ var getDefaults = () => {
     return;
   }
 };
-var getDefaultEmulatorHost = (productName) => {
-  var _a, _b;
-  return (_b = (_a = getDefaults()) === null || _a === void 0 ? void 0 : _a.emulatorHosts) === null || _b === void 0 ? void 0 : _b[productName];
-};
-var getDefaultEmulatorHostnameAndPort = (productName) => {
-  const host = getDefaultEmulatorHost(productName);
-  if (!host) {
-    return void 0;
-  }
-  const separatorIndex = host.lastIndexOf(":");
-  if (separatorIndex <= 0 || separatorIndex + 1 === host.length) {
-    throw new Error(`Invalid host ${host} with no separate hostname and port!`);
-  }
-  const port = parseInt(host.substring(separatorIndex + 1), 10);
-  if (host[0] === "[") {
-    return [host.substring(1, separatorIndex - 1), port];
-  } else {
-    return [host.substring(0, separatorIndex), port];
-  }
-};
-var getDefaultAppConfig = () => {
-  var _a;
-  return (_a = getDefaults()) === null || _a === void 0 ? void 0 : _a.config;
-};
-var getExperimentalSetting = (name7) => {
-  var _a;
-  return (_a = getDefaults()) === null || _a === void 0 ? void 0 : _a[`_${name7}`];
-};
-var Deferred = class {
-  constructor() {
-    this.reject = () => {
-    };
-    this.resolve = () => {
-    };
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-  }
-  /**
-   * Our API internals are not promisified and cannot because our callback APIs have subtle expectations around
-   * invoking promises inline, which Promises are forbidden to do. This method accepts an optional node-style callback
-   * and returns a node-style callback which will resolve or reject the Deferred's promise.
-   */
-  wrapCallback(callback) {
-    return (error, value) => {
-      if (error) {
-        this.reject(error);
-      } else {
-        this.resolve(value);
-      }
-      if (typeof callback === "function") {
-        this.promise.catch(() => {
-        });
-        if (callback.length === 1) {
-          callback(error);
-        } else {
-          callback(error, value);
-        }
-      }
-    };
-  }
-};
-function isCloudWorkstation(url) {
+var getExperimentalSetting2 = (name5) => getDefaults()?.[`_${name5}`];
+function isCloudWorkstation2(url) {
   try {
     const host = url.startsWith("http://") || url.startsWith("https://") ? new URL(url).hostname : url;
     return host.endsWith(".cloudworkstations.dev");
-  } catch (_a) {
+  } catch {
     return false;
   }
 }
-async function pingServer(endpoint) {
-  const result = await fetch(endpoint, {
-    credentials: "include"
-  });
-  return result.ok;
-}
-function createMockUserToken(token, projectId) {
-  if (token.uid) {
-    throw new Error('The "uid" field is no longer supported by mockUserToken. Please use "sub" instead for Firebase Auth User ID.');
-  }
-  const header = {
-    alg: "none",
-    type: "JWT"
-  };
-  const project = projectId || "demo-project";
-  const iat = token.iat || 0;
-  const sub = token.sub || token.user_id;
-  if (!sub) {
-    throw new Error("mockUserToken must contain 'sub' or 'user_id' field!");
-  }
-  const payload = Object.assign({
-    // Set all required fields to decent defaults
-    iss: `https://securetoken.google.com/${project}`,
-    aud: project,
-    iat,
-    exp: iat + 3600,
-    auth_time: iat,
-    sub,
-    user_id: sub,
-    firebase: {
-      sign_in_provider: "custom",
-      identities: {}
-    }
-  }, token);
-  const signature = "";
-  return [
-    base64urlEncodeWithoutPadding(JSON.stringify(header)),
-    base64urlEncodeWithoutPadding(JSON.stringify(payload)),
-    signature
-  ].join(".");
-}
-var emulatorStatus = {};
-function getEmulatorSummary() {
-  const summary = {
-    prod: [],
-    emulator: []
-  };
-  for (const key of Object.keys(emulatorStatus)) {
-    if (emulatorStatus[key]) {
-      summary.emulator.push(key);
-    } else {
-      summary.prod.push(key);
-    }
-  }
-  return summary;
-}
-function getOrCreateEl(id) {
-  let parentDiv = document.getElementById(id);
-  let created = false;
-  if (!parentDiv) {
-    parentDiv = document.createElement("div");
-    parentDiv.setAttribute("id", id);
-    created = true;
-  }
-  return { created, element: parentDiv };
-}
-var previouslyDismissed = false;
-function updateEmulatorBanner(name7, isRunningEmulator) {
-  if (typeof window === "undefined" || typeof document === "undefined" || !isCloudWorkstation(window.location.host) || emulatorStatus[name7] === isRunningEmulator || emulatorStatus[name7] || // If already set to use emulator, can't go back to prod.
-  previouslyDismissed) {
-    return;
-  }
-  emulatorStatus[name7] = isRunningEmulator;
-  function prefixedId(id) {
-    return `__firebase__banner__${id}`;
-  }
-  const bannerId = "__firebase__banner";
-  const summary = getEmulatorSummary();
-  const showError = summary.prod.length > 0;
-  function tearDown() {
-    const element = document.getElementById(bannerId);
-    if (element) {
-      element.remove();
-    }
-  }
-  function setupBannerStyles(bannerEl) {
-    bannerEl.style.display = "flex";
-    bannerEl.style.background = "#7faaf0";
-    bannerEl.style.position = "fixed";
-    bannerEl.style.bottom = "5px";
-    bannerEl.style.left = "5px";
-    bannerEl.style.padding = ".5em";
-    bannerEl.style.borderRadius = "5px";
-    bannerEl.style.alignItems = "center";
-  }
-  function setupIconStyles(prependIcon, iconId) {
-    prependIcon.setAttribute("width", "24");
-    prependIcon.setAttribute("id", iconId);
-    prependIcon.setAttribute("height", "24");
-    prependIcon.setAttribute("viewBox", "0 0 24 24");
-    prependIcon.setAttribute("fill", "none");
-    prependIcon.style.marginLeft = "-6px";
-  }
-  function setupCloseBtn() {
-    const closeBtn = document.createElement("span");
-    closeBtn.style.cursor = "pointer";
-    closeBtn.style.marginLeft = "16px";
-    closeBtn.style.fontSize = "24px";
-    closeBtn.innerHTML = " &times;";
-    closeBtn.onclick = () => {
-      previouslyDismissed = true;
-      tearDown();
-    };
-    return closeBtn;
-  }
-  function setupLinkStyles(learnMoreLink, learnMoreId) {
-    learnMoreLink.setAttribute("id", learnMoreId);
-    learnMoreLink.innerText = "Learn more";
-    learnMoreLink.href = "https://firebase.google.com/docs/studio/preview-apps#preview-backend";
-    learnMoreLink.setAttribute("target", "__blank");
-    learnMoreLink.style.paddingLeft = "5px";
-    learnMoreLink.style.textDecoration = "underline";
-  }
-  function setupDom() {
-    const banner = getOrCreateEl(bannerId);
-    const firebaseTextId = prefixedId("text");
-    const firebaseText = document.getElementById(firebaseTextId) || document.createElement("span");
-    const learnMoreId = prefixedId("learnmore");
-    const learnMoreLink = document.getElementById(learnMoreId) || document.createElement("a");
-    const prependIconId = prefixedId("preprendIcon");
-    const prependIcon = document.getElementById(prependIconId) || document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    if (banner.created) {
-      const bannerEl = banner.element;
-      setupBannerStyles(bannerEl);
-      setupLinkStyles(learnMoreLink, learnMoreId);
-      const closeBtn = setupCloseBtn();
-      setupIconStyles(prependIcon, prependIconId);
-      bannerEl.append(prependIcon, firebaseText, learnMoreLink, closeBtn);
-      document.body.appendChild(bannerEl);
-    }
-    if (showError) {
-      firebaseText.innerText = `Preview backend disconnected.`;
-      prependIcon.innerHTML = `<g clip-path="url(#clip0_6013_33858)">
-<path d="M4.8 17.6L12 5.6L19.2 17.6H4.8ZM6.91667 16.4H17.0833L12 7.93333L6.91667 16.4ZM12 15.6C12.1667 15.6 12.3056 15.5444 12.4167 15.4333C12.5389 15.3111 12.6 15.1667 12.6 15C12.6 14.8333 12.5389 14.6944 12.4167 14.5833C12.3056 14.4611 12.1667 14.4 12 14.4C11.8333 14.4 11.6889 14.4611 11.5667 14.5833C11.4556 14.6944 11.4 14.8333 11.4 15C11.4 15.1667 11.4556 15.3111 11.5667 15.4333C11.6889 15.5444 11.8333 15.6 12 15.6ZM11.4 13.6H12.6V10.4H11.4V13.6Z" fill="#212121"/>
-</g>
-<defs>
-<clipPath id="clip0_6013_33858">
-<rect width="24" height="24" fill="white"/>
-</clipPath>
-</defs>`;
-    } else {
-      prependIcon.innerHTML = `<g clip-path="url(#clip0_6083_34804)">
-<path d="M11.4 15.2H12.6V11.2H11.4V15.2ZM12 10C12.1667 10 12.3056 9.94444 12.4167 9.83333C12.5389 9.71111 12.6 9.56667 12.6 9.4C12.6 9.23333 12.5389 9.09444 12.4167 8.98333C12.3056 8.86111 12.1667 8.8 12 8.8C11.8333 8.8 11.6889 8.86111 11.5667 8.98333C11.4556 9.09444 11.4 9.23333 11.4 9.4C11.4 9.56667 11.4556 9.71111 11.5667 9.83333C11.6889 9.94444 11.8333 10 12 10ZM12 18.4C11.1222 18.4 10.2944 18.2333 9.51667 17.9C8.73889 17.5667 8.05556 17.1111 7.46667 16.5333C6.88889 15.9444 6.43333 15.2611 6.1 14.4833C5.76667 13.7056 5.6 12.8778 5.6 12C5.6 11.1111 5.76667 10.2833 6.1 9.51667C6.43333 8.73889 6.88889 8.06111 7.46667 7.48333C8.05556 6.89444 8.73889 6.43333 9.51667 6.1C10.2944 5.76667 11.1222 5.6 12 5.6C12.8889 5.6 13.7167 5.76667 14.4833 6.1C15.2611 6.43333 15.9389 6.89444 16.5167 7.48333C17.1056 8.06111 17.5667 8.73889 17.9 9.51667C18.2333 10.2833 18.4 11.1111 18.4 12C18.4 12.8778 18.2333 13.7056 17.9 14.4833C17.5667 15.2611 17.1056 15.9444 16.5167 16.5333C15.9389 17.1111 15.2611 17.5667 14.4833 17.9C13.7167 18.2333 12.8889 18.4 12 18.4ZM12 17.2C13.4444 17.2 14.6722 16.6944 15.6833 15.6833C16.6944 14.6722 17.2 13.4444 17.2 12C17.2 10.5556 16.6944 9.32778 15.6833 8.31667C14.6722 7.30555 13.4444 6.8 12 6.8C10.5556 6.8 9.32778 7.30555 8.31667 8.31667C7.30556 9.32778 6.8 10.5556 6.8 12C6.8 13.4444 7.30556 14.6722 8.31667 15.6833C9.32778 16.6944 10.5556 17.2 12 17.2Z" fill="#212121"/>
-</g>
-<defs>
-<clipPath id="clip0_6083_34804">
-<rect width="24" height="24" fill="white"/>
-</clipPath>
-</defs>`;
-      firebaseText.innerText = "Preview backend running in this workspace.";
-    }
-    firebaseText.setAttribute("id", firebaseTextId);
-  }
-  if (document.readyState === "loading") {
-    window.addEventListener("DOMContentLoaded", setupDom);
-  } else {
-    setupDom();
-  }
-}
-function getUA() {
+function getUA2() {
   if (typeof navigator !== "undefined" && typeof navigator["userAgent"] === "string") {
     return navigator["userAgent"];
   } else {
     return "";
   }
 }
-function isMobileCordova() {
+function isMobileCordova2() {
   return typeof window !== "undefined" && // @ts-ignore Setting up an broadly applicable index signature for Window
   // just to deal with this case would probably be a bad idea.
-  !!(window["cordova"] || window["phonegap"] || window["PhoneGap"]) && /ios|iphone|ipod|ipad|android|blackberry|iemobile/i.test(getUA());
+  !!(window["cordova"] || window["phonegap"] || window["PhoneGap"]) && /ios|iphone|ipod|ipad|android|blackberry|iemobile/i.test(getUA2());
 }
 function isNode() {
-  var _a;
-  const forceEnvironment = (_a = getDefaults()) === null || _a === void 0 ? void 0 : _a.forceEnvironment;
+  const forceEnvironment = getDefaults()?.forceEnvironment;
   if (forceEnvironment === "node") {
     return true;
   } else if (forceEnvironment === "browser") {
@@ -616,33 +1219,24 @@ function isNode() {
     return false;
   }
 }
-function isBrowser() {
-  return typeof window !== "undefined" || isWebWorker();
-}
-function isWebWorker() {
-  return typeof WorkerGlobalScope !== "undefined" && typeof self !== "undefined" && self instanceof WorkerGlobalScope;
-}
-function isCloudflareWorker() {
+function isCloudflareWorker2() {
   return typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
 }
-function isBrowserExtension() {
+function isBrowserExtension2() {
   const runtime = typeof chrome === "object" ? chrome.runtime : typeof browser === "object" ? browser.runtime : void 0;
   return typeof runtime === "object" && runtime.id !== void 0;
 }
-function isReactNative() {
+function isReactNative2() {
   return typeof navigator === "object" && navigator["product"] === "ReactNative";
 }
-function isIE() {
-  const ua = getUA();
+function isIE2() {
+  const ua = getUA2();
   return ua.indexOf("MSIE ") >= 0 || ua.indexOf("Trident/") >= 0;
 }
-function isSafari() {
+function isSafari2() {
   return !isNode() && !!navigator.userAgent && navigator.userAgent.includes("Safari") && !navigator.userAgent.includes("Chrome");
 }
-function isSafariOrWebkit() {
-  return !isNode() && !!navigator.userAgent && (navigator.userAgent.includes("Safari") || navigator.userAgent.includes("WebKit")) && !navigator.userAgent.includes("Chrome");
-}
-function isIndexedDBAvailable() {
+function isIndexedDBAvailable2() {
   try {
     return typeof indexedDB === "object";
   } catch (e) {
@@ -666,8 +1260,7 @@ function validateIndexedDBOpenable() {
         preExist = false;
       };
       request.onerror = () => {
-        var _a;
-        reject(((_a = request.error) === null || _a === void 0 ? void 0 : _a.message) || "");
+        reject(request.error?.message || "");
       };
     } catch (error) {
       reject(error);
@@ -675,7 +1268,7 @@ function validateIndexedDBOpenable() {
   });
 }
 var ERROR_NAME = "FirebaseError";
-var FirebaseError = class _FirebaseError extends Error {
+var FirebaseError2 = class _FirebaseError extends Error {
   constructor(code, message, customData) {
     super(message);
     this.code = code;
@@ -683,11 +1276,11 @@ var FirebaseError = class _FirebaseError extends Error {
     this.name = ERROR_NAME;
     Object.setPrototypeOf(this, _FirebaseError.prototype);
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ErrorFactory.prototype.create);
+      Error.captureStackTrace(this, ErrorFactory2.prototype.create);
     }
   }
 };
-var ErrorFactory = class {
+var ErrorFactory2 = class {
   constructor(service, serviceName, errors) {
     this.service = service;
     this.serviceName = serviceName;
@@ -699,7 +1292,7 @@ var ErrorFactory = class {
     const template = this.errors[code];
     const message = template ? replaceTemplate(template, customData) : "Error";
     const fullMessage = `${this.serviceName}: ${message} (${fullCode}).`;
-    const error = new FirebaseError(fullCode, fullMessage, customData);
+    const error = new FirebaseError2(fullCode, fullMessage, customData);
     return error;
   }
 };
@@ -710,45 +1303,7 @@ function replaceTemplate(template, data) {
   });
 }
 var PATTERN = /\{\$([^}]+)}/g;
-function isEmpty(obj) {
-  for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      return false;
-    }
-  }
-  return true;
-}
-function deepEqual(a, b) {
-  if (a === b) {
-    return true;
-  }
-  const aKeys = Object.keys(a);
-  const bKeys = Object.keys(b);
-  for (const k2 of aKeys) {
-    if (!bKeys.includes(k2)) {
-      return false;
-    }
-    const aProp = a[k2];
-    const bProp = b[k2];
-    if (isObject(aProp) && isObject(bProp)) {
-      if (!deepEqual(aProp, bProp)) {
-        return false;
-      }
-    } else if (aProp !== bProp) {
-      return false;
-    }
-  }
-  for (const k2 of bKeys) {
-    if (!aKeys.includes(k2)) {
-      return false;
-    }
-  }
-  return true;
-}
-function isObject(thing) {
-  return thing !== null && typeof thing === "object";
-}
-function querystring(querystringParams) {
+function querystring2(querystringParams) {
   const params = [];
   for (const [key, value] of Object.entries(querystringParams)) {
     if (Array.isArray(value)) {
@@ -761,7 +1316,7 @@ function querystring(querystringParams) {
   }
   return params.length ? "&" + params.join("&") : "";
 }
-function querystringDecode(querystring3) {
+function querystringDecode2(querystring3) {
   const obj = {};
   const tokens = querystring3.replace(/^\?/, "").split("&");
   tokens.forEach((token) => {
@@ -772,7 +1327,7 @@ function querystringDecode(querystring3) {
   });
   return obj;
 }
-function extractQuerystring(url) {
+function extractQuerystring2(url) {
   const queryStart = url.indexOf("?");
   if (!queryStart) {
     return "";
@@ -780,7 +1335,7 @@ function extractQuerystring(url) {
   const fragmentStart = url.indexOf("#", queryStart);
   return url.substring(queryStart, fragmentStart > 0 ? fragmentStart : void 0);
 }
-function createSubscribe(executor, onNoObservers) {
+function createSubscribe2(executor, onNoObservers) {
   const proxy = new ObserverProxy(executor, onNoObservers);
   return proxy.subscribe.bind(proxy);
 }
@@ -934,7 +1489,7 @@ function implementsAnyMethods(obj, methods) {
 function noop() {
 }
 var MAX_VALUE_MILLIS = 4 * 60 * 60 * 1e3;
-function getModularInstance(service) {
+function getModularInstance2(service) {
   if (service && service._delegate) {
     return service._delegate;
   } else {
@@ -942,16 +1497,16 @@ function getModularInstance(service) {
   }
 }
 
-// node_modules/@angular/fire/node_modules/@firebase/component/dist/esm/index.esm2017.js
-var Component = class {
+// node_modules/@firebase/component/dist/esm/index.esm.js
+var Component2 = class {
   /**
    *
    * @param name The public service name, e.g. app, auth, firestore, database
    * @param instanceFactory Service factory responsible for creating the public interface
    * @param type whether the service provided by the component is public or private
    */
-  constructor(name7, instanceFactory, type) {
-    this.name = name7;
+  constructor(name5, instanceFactory, type) {
+    this.name = name5;
     this.instanceFactory = instanceFactory;
     this.type = type;
     this.multipleInstances = false;
@@ -976,287 +1531,33 @@ var Component = class {
     return this;
   }
 };
-var DEFAULT_ENTRY_NAME = "[DEFAULT]";
-var Provider = class {
-  constructor(name7, container) {
-    this.name = name7;
-    this.container = container;
-    this.component = null;
-    this.instances = /* @__PURE__ */ new Map();
-    this.instancesDeferred = /* @__PURE__ */ new Map();
-    this.instancesOptions = /* @__PURE__ */ new Map();
-    this.onInitCallbacks = /* @__PURE__ */ new Map();
-  }
-  /**
-   * @param identifier A provider can provide multiple instances of a service
-   * if this.component.multipleInstances is true.
-   */
-  get(identifier) {
-    const normalizedIdentifier = this.normalizeInstanceIdentifier(identifier);
-    if (!this.instancesDeferred.has(normalizedIdentifier)) {
-      const deferred = new Deferred();
-      this.instancesDeferred.set(normalizedIdentifier, deferred);
-      if (this.isInitialized(normalizedIdentifier) || this.shouldAutoInitialize()) {
-        try {
-          const instance = this.getOrInitializeService({
-            instanceIdentifier: normalizedIdentifier
-          });
-          if (instance) {
-            deferred.resolve(instance);
-          }
-        } catch (e) {
-        }
-      }
-    }
-    return this.instancesDeferred.get(normalizedIdentifier).promise;
-  }
-  getImmediate(options) {
-    var _a;
-    const normalizedIdentifier = this.normalizeInstanceIdentifier(options === null || options === void 0 ? void 0 : options.identifier);
-    const optional = (_a = options === null || options === void 0 ? void 0 : options.optional) !== null && _a !== void 0 ? _a : false;
-    if (this.isInitialized(normalizedIdentifier) || this.shouldAutoInitialize()) {
-      try {
-        return this.getOrInitializeService({
-          instanceIdentifier: normalizedIdentifier
-        });
-      } catch (e) {
-        if (optional) {
-          return null;
-        } else {
-          throw e;
-        }
-      }
-    } else {
-      if (optional) {
-        return null;
-      } else {
-        throw Error(`Service ${this.name} is not available`);
-      }
-    }
-  }
-  getComponent() {
-    return this.component;
-  }
-  setComponent(component) {
-    if (component.name !== this.name) {
-      throw Error(`Mismatching Component ${component.name} for Provider ${this.name}.`);
-    }
-    if (this.component) {
-      throw Error(`Component for ${this.name} has already been provided`);
-    }
-    this.component = component;
-    if (!this.shouldAutoInitialize()) {
-      return;
-    }
-    if (isComponentEager(component)) {
-      try {
-        this.getOrInitializeService({ instanceIdentifier: DEFAULT_ENTRY_NAME });
-      } catch (e) {
-      }
-    }
-    for (const [instanceIdentifier, instanceDeferred] of this.instancesDeferred.entries()) {
-      const normalizedIdentifier = this.normalizeInstanceIdentifier(instanceIdentifier);
-      try {
-        const instance = this.getOrInitializeService({
-          instanceIdentifier: normalizedIdentifier
-        });
-        instanceDeferred.resolve(instance);
-      } catch (e) {
-      }
-    }
-  }
-  clearInstance(identifier = DEFAULT_ENTRY_NAME) {
-    this.instancesDeferred.delete(identifier);
-    this.instancesOptions.delete(identifier);
-    this.instances.delete(identifier);
-  }
-  // app.delete() will call this method on every provider to delete the services
-  // TODO: should we mark the provider as deleted?
-  async delete() {
-    const services = Array.from(this.instances.values());
-    await Promise.all([
-      ...services.filter((service) => "INTERNAL" in service).map((service) => service.INTERNAL.delete()),
-      ...services.filter((service) => "_delete" in service).map((service) => service._delete())
-    ]);
-  }
-  isComponentSet() {
-    return this.component != null;
-  }
-  isInitialized(identifier = DEFAULT_ENTRY_NAME) {
-    return this.instances.has(identifier);
-  }
-  getOptions(identifier = DEFAULT_ENTRY_NAME) {
-    return this.instancesOptions.get(identifier) || {};
-  }
-  initialize(opts = {}) {
-    const { options = {} } = opts;
-    const normalizedIdentifier = this.normalizeInstanceIdentifier(opts.instanceIdentifier);
-    if (this.isInitialized(normalizedIdentifier)) {
-      throw Error(`${this.name}(${normalizedIdentifier}) has already been initialized`);
-    }
-    if (!this.isComponentSet()) {
-      throw Error(`Component ${this.name} has not been registered yet`);
-    }
-    const instance = this.getOrInitializeService({
-      instanceIdentifier: normalizedIdentifier,
-      options
-    });
-    for (const [instanceIdentifier, instanceDeferred] of this.instancesDeferred.entries()) {
-      const normalizedDeferredIdentifier = this.normalizeInstanceIdentifier(instanceIdentifier);
-      if (normalizedIdentifier === normalizedDeferredIdentifier) {
-        instanceDeferred.resolve(instance);
-      }
-    }
-    return instance;
-  }
-  /**
-   *
-   * @param callback - a function that will be invoked  after the provider has been initialized by calling provider.initialize().
-   * The function is invoked SYNCHRONOUSLY, so it should not execute any longrunning tasks in order to not block the program.
-   *
-   * @param identifier An optional instance identifier
-   * @returns a function to unregister the callback
-   */
-  onInit(callback, identifier) {
-    var _a;
-    const normalizedIdentifier = this.normalizeInstanceIdentifier(identifier);
-    const existingCallbacks = (_a = this.onInitCallbacks.get(normalizedIdentifier)) !== null && _a !== void 0 ? _a : /* @__PURE__ */ new Set();
-    existingCallbacks.add(callback);
-    this.onInitCallbacks.set(normalizedIdentifier, existingCallbacks);
-    const existingInstance = this.instances.get(normalizedIdentifier);
-    if (existingInstance) {
-      callback(existingInstance, normalizedIdentifier);
-    }
-    return () => {
-      existingCallbacks.delete(callback);
-    };
-  }
-  /**
-   * Invoke onInit callbacks synchronously
-   * @param instance the service instance`
-   */
-  invokeOnInitCallbacks(instance, identifier) {
-    const callbacks = this.onInitCallbacks.get(identifier);
-    if (!callbacks) {
-      return;
-    }
-    for (const callback of callbacks) {
-      try {
-        callback(instance, identifier);
-      } catch (_a) {
-      }
-    }
-  }
-  getOrInitializeService({ instanceIdentifier, options = {} }) {
-    let instance = this.instances.get(instanceIdentifier);
-    if (!instance && this.component) {
-      instance = this.component.instanceFactory(this.container, {
-        instanceIdentifier: normalizeIdentifierForFactory(instanceIdentifier),
-        options
-      });
-      this.instances.set(instanceIdentifier, instance);
-      this.instancesOptions.set(instanceIdentifier, options);
-      this.invokeOnInitCallbacks(instance, instanceIdentifier);
-      if (this.component.onInstanceCreated) {
-        try {
-          this.component.onInstanceCreated(this.container, instanceIdentifier, instance);
-        } catch (_a) {
-        }
-      }
-    }
-    return instance || null;
-  }
-  normalizeInstanceIdentifier(identifier = DEFAULT_ENTRY_NAME) {
-    if (this.component) {
-      return this.component.multipleInstances ? identifier : DEFAULT_ENTRY_NAME;
-    } else {
-      return identifier;
-    }
-  }
-  shouldAutoInitialize() {
-    return !!this.component && this.component.instantiationMode !== "EXPLICIT";
-  }
-};
-function normalizeIdentifierForFactory(identifier) {
-  return identifier === DEFAULT_ENTRY_NAME ? void 0 : identifier;
-}
-function isComponentEager(component) {
-  return component.instantiationMode === "EAGER";
-}
-var ComponentContainer = class {
-  constructor(name7) {
-    this.name = name7;
-    this.providers = /* @__PURE__ */ new Map();
-  }
-  /**
-   *
-   * @param component Component being added
-   * @param overwrite When a component with the same name has already been registered,
-   * if overwrite is true: overwrite the existing component with the new component and create a new
-   * provider with the new component. It can be useful in tests where you want to use different mocks
-   * for different tests.
-   * if overwrite is false: throw an exception
-   */
-  addComponent(component) {
-    const provider = this.getProvider(component.name);
-    if (provider.isComponentSet()) {
-      throw new Error(`Component ${component.name} has already been registered with ${this.name}`);
-    }
-    provider.setComponent(component);
-  }
-  addOrOverwriteComponent(component) {
-    const provider = this.getProvider(component.name);
-    if (provider.isComponentSet()) {
-      this.providers.delete(component.name);
-    }
-    this.addComponent(component);
-  }
-  /**
-   * getProvider provides a type safe interface where it can only be called with a field name
-   * present in NameServiceMapping interface.
-   *
-   * Firebase SDKs providing services should extend NameServiceMapping interface to register
-   * themselves.
-   */
-  getProvider(name7) {
-    if (this.providers.has(name7)) {
-      return this.providers.get(name7);
-    }
-    const provider = new Provider(name7, this);
-    this.providers.set(name7, provider);
-    return provider;
-  }
-  getProviders() {
-    return Array.from(this.providers.values());
-  }
-};
 
-// node_modules/@angular/fire/node_modules/@firebase/logger/dist/esm/index.esm2017.js
+// node_modules/@firebase/logger/dist/esm/index.esm.js
 var instances = [];
-var LogLevel;
-(function(LogLevel4) {
-  LogLevel4[LogLevel4["DEBUG"] = 0] = "DEBUG";
-  LogLevel4[LogLevel4["VERBOSE"] = 1] = "VERBOSE";
-  LogLevel4[LogLevel4["INFO"] = 2] = "INFO";
-  LogLevel4[LogLevel4["WARN"] = 3] = "WARN";
-  LogLevel4[LogLevel4["ERROR"] = 4] = "ERROR";
-  LogLevel4[LogLevel4["SILENT"] = 5] = "SILENT";
-})(LogLevel || (LogLevel = {}));
+var LogLevel2;
+(function(LogLevel3) {
+  LogLevel3[LogLevel3["DEBUG"] = 0] = "DEBUG";
+  LogLevel3[LogLevel3["VERBOSE"] = 1] = "VERBOSE";
+  LogLevel3[LogLevel3["INFO"] = 2] = "INFO";
+  LogLevel3[LogLevel3["WARN"] = 3] = "WARN";
+  LogLevel3[LogLevel3["ERROR"] = 4] = "ERROR";
+  LogLevel3[LogLevel3["SILENT"] = 5] = "SILENT";
+})(LogLevel2 || (LogLevel2 = {}));
 var levelStringToEnum = {
-  "debug": LogLevel.DEBUG,
-  "verbose": LogLevel.VERBOSE,
-  "info": LogLevel.INFO,
-  "warn": LogLevel.WARN,
-  "error": LogLevel.ERROR,
-  "silent": LogLevel.SILENT
+  "debug": LogLevel2.DEBUG,
+  "verbose": LogLevel2.VERBOSE,
+  "info": LogLevel2.INFO,
+  "warn": LogLevel2.WARN,
+  "error": LogLevel2.ERROR,
+  "silent": LogLevel2.SILENT
 };
-var defaultLogLevel = LogLevel.INFO;
+var defaultLogLevel = LogLevel2.INFO;
 var ConsoleMethod = {
-  [LogLevel.DEBUG]: "log",
-  [LogLevel.VERBOSE]: "log",
-  [LogLevel.INFO]: "info",
-  [LogLevel.WARN]: "warn",
-  [LogLevel.ERROR]: "error"
+  [LogLevel2.DEBUG]: "log",
+  [LogLevel2.VERBOSE]: "log",
+  [LogLevel2.INFO]: "info",
+  [LogLevel2.WARN]: "warn",
+  [LogLevel2.ERROR]: "error"
 };
 var defaultLogHandler = (instance, logType, ...args) => {
   if (logType < instance.logLevel) {
@@ -1270,15 +1571,15 @@ var defaultLogHandler = (instance, logType, ...args) => {
     throw new Error(`Attempted to log a message with an invalid logType (value: ${logType})`);
   }
 };
-var Logger = class {
+var Logger2 = class {
   /**
    * Gives you an instance of a Logger to capture messages according to
    * Firebase's logging scheme.
    *
    * @param name The name that the logs will be associated with
    */
-  constructor(name7) {
-    this.name = name7;
+  constructor(name5) {
+    this.name = name5;
     this._logLevel = defaultLogLevel;
     this._logHandler = defaultLogHandler;
     this._userLogHandler = null;
@@ -1288,7 +1589,7 @@ var Logger = class {
     return this._logLevel;
   }
   set logLevel(val) {
-    if (!(val in LogLevel)) {
+    if (!(val in LogLevel2)) {
       throw new TypeError(`Invalid value "${val}" assigned to \`logLevel\``);
     }
     this._logLevel = val;
@@ -1316,278 +1617,28 @@ var Logger = class {
    * The functions below are all based on the `console` interface
    */
   debug(...args) {
-    this._userLogHandler && this._userLogHandler(this, LogLevel.DEBUG, ...args);
-    this._logHandler(this, LogLevel.DEBUG, ...args);
+    this._userLogHandler && this._userLogHandler(this, LogLevel2.DEBUG, ...args);
+    this._logHandler(this, LogLevel2.DEBUG, ...args);
   }
   log(...args) {
-    this._userLogHandler && this._userLogHandler(this, LogLevel.VERBOSE, ...args);
-    this._logHandler(this, LogLevel.VERBOSE, ...args);
+    this._userLogHandler && this._userLogHandler(this, LogLevel2.VERBOSE, ...args);
+    this._logHandler(this, LogLevel2.VERBOSE, ...args);
   }
   info(...args) {
-    this._userLogHandler && this._userLogHandler(this, LogLevel.INFO, ...args);
-    this._logHandler(this, LogLevel.INFO, ...args);
+    this._userLogHandler && this._userLogHandler(this, LogLevel2.INFO, ...args);
+    this._logHandler(this, LogLevel2.INFO, ...args);
   }
   warn(...args) {
-    this._userLogHandler && this._userLogHandler(this, LogLevel.WARN, ...args);
-    this._logHandler(this, LogLevel.WARN, ...args);
+    this._userLogHandler && this._userLogHandler(this, LogLevel2.WARN, ...args);
+    this._logHandler(this, LogLevel2.WARN, ...args);
   }
   error(...args) {
-    this._userLogHandler && this._userLogHandler(this, LogLevel.ERROR, ...args);
-    this._logHandler(this, LogLevel.ERROR, ...args);
+    this._userLogHandler && this._userLogHandler(this, LogLevel2.ERROR, ...args);
+    this._logHandler(this, LogLevel2.ERROR, ...args);
   }
 };
-function setLogLevel(level) {
-  instances.forEach((inst) => {
-    inst.setLogLevel(level);
-  });
-}
-function setUserLogHandler(logCallback, options) {
-  for (const instance of instances) {
-    let customLogLevel = null;
-    if (options && options.level) {
-      customLogLevel = levelStringToEnum[options.level];
-    }
-    if (logCallback === null) {
-      instance.userLogHandler = null;
-    } else {
-      instance.userLogHandler = (instance2, level, ...args) => {
-        const message = args.map((arg) => {
-          if (arg == null) {
-            return null;
-          } else if (typeof arg === "string") {
-            return arg;
-          } else if (typeof arg === "number" || typeof arg === "boolean") {
-            return arg.toString();
-          } else if (arg instanceof Error) {
-            return arg.message;
-          } else {
-            try {
-              return JSON.stringify(arg);
-            } catch (ignored) {
-              return null;
-            }
-          }
-        }).filter((arg) => arg).join(" ");
-        if (level >= (customLogLevel !== null && customLogLevel !== void 0 ? customLogLevel : instance2.logLevel)) {
-          logCallback({
-            level: LogLevel[level].toLowerCase(),
-            message,
-            args,
-            type: instance2.name
-          });
-        }
-      };
-    }
-  }
-}
 
-// node_modules/idb/build/wrap-idb-value.js
-var instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
-var idbProxyableTypes;
-var cursorAdvanceMethods;
-function getIdbProxyableTypes() {
-  return idbProxyableTypes || (idbProxyableTypes = [
-    IDBDatabase,
-    IDBObjectStore,
-    IDBIndex,
-    IDBCursor,
-    IDBTransaction
-  ]);
-}
-function getCursorAdvanceMethods() {
-  return cursorAdvanceMethods || (cursorAdvanceMethods = [
-    IDBCursor.prototype.advance,
-    IDBCursor.prototype.continue,
-    IDBCursor.prototype.continuePrimaryKey
-  ]);
-}
-var cursorRequestMap = /* @__PURE__ */ new WeakMap();
-var transactionDoneMap = /* @__PURE__ */ new WeakMap();
-var transactionStoreNamesMap = /* @__PURE__ */ new WeakMap();
-var transformCache = /* @__PURE__ */ new WeakMap();
-var reverseTransformCache = /* @__PURE__ */ new WeakMap();
-function promisifyRequest(request) {
-  const promise = new Promise((resolve, reject) => {
-    const unlisten = () => {
-      request.removeEventListener("success", success);
-      request.removeEventListener("error", error);
-    };
-    const success = () => {
-      resolve(wrap(request.result));
-      unlisten();
-    };
-    const error = () => {
-      reject(request.error);
-      unlisten();
-    };
-    request.addEventListener("success", success);
-    request.addEventListener("error", error);
-  });
-  promise.then((value) => {
-    if (value instanceof IDBCursor) {
-      cursorRequestMap.set(value, request);
-    }
-  }).catch(() => {
-  });
-  reverseTransformCache.set(promise, request);
-  return promise;
-}
-function cacheDonePromiseForTransaction(tx) {
-  if (transactionDoneMap.has(tx))
-    return;
-  const done = new Promise((resolve, reject) => {
-    const unlisten = () => {
-      tx.removeEventListener("complete", complete);
-      tx.removeEventListener("error", error);
-      tx.removeEventListener("abort", error);
-    };
-    const complete = () => {
-      resolve();
-      unlisten();
-    };
-    const error = () => {
-      reject(tx.error || new DOMException("AbortError", "AbortError"));
-      unlisten();
-    };
-    tx.addEventListener("complete", complete);
-    tx.addEventListener("error", error);
-    tx.addEventListener("abort", error);
-  });
-  transactionDoneMap.set(tx, done);
-}
-var idbProxyTraps = {
-  get(target, prop, receiver) {
-    if (target instanceof IDBTransaction) {
-      if (prop === "done")
-        return transactionDoneMap.get(target);
-      if (prop === "objectStoreNames") {
-        return target.objectStoreNames || transactionStoreNamesMap.get(target);
-      }
-      if (prop === "store") {
-        return receiver.objectStoreNames[1] ? void 0 : receiver.objectStore(receiver.objectStoreNames[0]);
-      }
-    }
-    return wrap(target[prop]);
-  },
-  set(target, prop, value) {
-    target[prop] = value;
-    return true;
-  },
-  has(target, prop) {
-    if (target instanceof IDBTransaction && (prop === "done" || prop === "store")) {
-      return true;
-    }
-    return prop in target;
-  }
-};
-function replaceTraps(callback) {
-  idbProxyTraps = callback(idbProxyTraps);
-}
-function wrapFunction(func) {
-  if (func === IDBDatabase.prototype.transaction && !("objectStoreNames" in IDBTransaction.prototype)) {
-    return function(storeNames, ...args) {
-      const tx = func.call(unwrap(this), storeNames, ...args);
-      transactionStoreNamesMap.set(tx, storeNames.sort ? storeNames.sort() : [storeNames]);
-      return wrap(tx);
-    };
-  }
-  if (getCursorAdvanceMethods().includes(func)) {
-    return function(...args) {
-      func.apply(unwrap(this), args);
-      return wrap(cursorRequestMap.get(this));
-    };
-  }
-  return function(...args) {
-    return wrap(func.apply(unwrap(this), args));
-  };
-}
-function transformCachableValue(value) {
-  if (typeof value === "function")
-    return wrapFunction(value);
-  if (value instanceof IDBTransaction)
-    cacheDonePromiseForTransaction(value);
-  if (instanceOfAny(value, getIdbProxyableTypes()))
-    return new Proxy(value, idbProxyTraps);
-  return value;
-}
-function wrap(value) {
-  if (value instanceof IDBRequest)
-    return promisifyRequest(value);
-  if (transformCache.has(value))
-    return transformCache.get(value);
-  const newValue = transformCachableValue(value);
-  if (newValue !== value) {
-    transformCache.set(value, newValue);
-    reverseTransformCache.set(newValue, value);
-  }
-  return newValue;
-}
-var unwrap = (value) => reverseTransformCache.get(value);
-
-// node_modules/idb/build/index.js
-function openDB(name7, version7, { blocked, upgrade, blocking, terminated } = {}) {
-  const request = indexedDB.open(name7, version7);
-  const openPromise = wrap(request);
-  if (upgrade) {
-    request.addEventListener("upgradeneeded", (event) => {
-      upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction), event);
-    });
-  }
-  if (blocked) {
-    request.addEventListener("blocked", (event) => blocked(
-      // Casting due to https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/1405
-      event.oldVersion,
-      event.newVersion,
-      event
-    ));
-  }
-  openPromise.then((db) => {
-    if (terminated)
-      db.addEventListener("close", () => terminated());
-    if (blocking) {
-      db.addEventListener("versionchange", (event) => blocking(event.oldVersion, event.newVersion, event));
-    }
-  }).catch(() => {
-  });
-  return openPromise;
-}
-var readMethods = ["get", "getKey", "getAll", "getAllKeys", "count"];
-var writeMethods = ["put", "add", "delete", "clear"];
-var cachedMethods = /* @__PURE__ */ new Map();
-function getMethod(target, prop) {
-  if (!(target instanceof IDBDatabase && !(prop in target) && typeof prop === "string")) {
-    return;
-  }
-  if (cachedMethods.get(prop))
-    return cachedMethods.get(prop);
-  const targetFuncName = prop.replace(/FromIndex$/, "");
-  const useIndex = prop !== targetFuncName;
-  const isWrite = writeMethods.includes(targetFuncName);
-  if (
-    // Bail if the target doesn't exist on the target. Eg, getAll isn't in Edge.
-    !(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) || !(isWrite || readMethods.includes(targetFuncName))
-  ) {
-    return;
-  }
-  const method = async function(storeName, ...args) {
-    const tx = this.transaction(storeName, isWrite ? "readwrite" : "readonly");
-    let target2 = tx.store;
-    if (useIndex)
-      target2 = target2.index(args.shift());
-    return (await Promise.all([
-      target2[targetFuncName](...args),
-      isWrite && tx.done
-    ]))[0];
-  };
-  cachedMethods.set(prop, method);
-  return method;
-}
-replaceTraps((oldTraps) => __spreadProps(__spreadValues({}, oldTraps), {
-  get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
-  has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop)
-}));
-
-// node_modules/@angular/fire/node_modules/@firebase/app/dist/esm/index.esm2017.js
+// node_modules/@firebase/app/dist/esm/index.esm.js
 var PlatformLoggerServiceImpl = class {
   constructor(container) {
     this.container = container;
@@ -1608,11 +1659,11 @@ var PlatformLoggerServiceImpl = class {
 };
 function isVersionServiceProvider(provider) {
   const component = provider.getComponent();
-  return (component === null || component === void 0 ? void 0 : component.type) === "VERSION";
+  return component?.type === "VERSION";
 }
 var name$q = "@firebase/app";
-var version$1 = "0.13.2";
-var logger = new Logger("@firebase/app");
+var version$1 = "0.14.7";
+var logger2 = new Logger2("@firebase/app");
 var name$p = "@firebase/app-compat";
 var name$o = "@firebase/analytics-compat";
 var name$n = "@firebase/analytics";
@@ -1638,9 +1689,8 @@ var name$4 = "@firebase/storage-compat";
 var name$3 = "@firebase/firestore";
 var name$2 = "@firebase/ai";
 var name$1 = "@firebase/firestore-compat";
-var name = "firebase";
-var version = "11.10.0";
-var DEFAULT_ENTRY_NAME2 = "[DEFAULT]";
+var name2 = "firebase";
+var version2 = "12.8.0";
 var PLATFORM_LOG_STRING = {
   [name$q]: "fire-core",
   [name$p]: "fire-core-compat",
@@ -1670,7 +1720,7 @@ var PLATFORM_LOG_STRING = {
   [name$2]: "fire-vertex",
   "fire-js": "fire-js",
   // Platform identifier for JS SDK.
-  [name]: "fire-js-all"
+  [name2]: "fire-js-all"
 };
 var _apps = /* @__PURE__ */ new Map();
 var _serverApps = /* @__PURE__ */ new Map();
@@ -1679,13 +1729,13 @@ function _addComponent(app, component) {
   try {
     app.container.addComponent(component);
   } catch (e) {
-    logger.debug(`Component ${component.name} failed to register with FirebaseApp ${app.name}`, e);
+    logger2.debug(`Component ${component.name} failed to register with FirebaseApp ${app.name}`, e);
   }
 }
-function _registerComponent(component) {
+function _registerComponent2(component) {
   const componentName = component.name;
   if (_components.has(componentName)) {
-    logger.debug(`There were multiple attempts to register component ${componentName}.`);
+    logger2.debug(`There were multiple attempts to register component ${componentName}.`);
     return false;
   }
   _components.set(componentName, component);
@@ -1697,26 +1747,13 @@ function _registerComponent(component) {
   }
   return true;
 }
-function _getProvider(app, name7) {
-  const heartbeatController = app.container.getProvider("heartbeat").getImmediate({ optional: true });
-  if (heartbeatController) {
-    void heartbeatController.triggerHeartbeat();
-  }
-  return app.container.getProvider(name7);
-}
-function _removeServiceInstance(app, name7, instanceIdentifier = DEFAULT_ENTRY_NAME2) {
-  _getProvider(app, name7).clearInstance(instanceIdentifier);
-}
-function _isFirebaseApp(obj) {
-  return obj.options !== void 0;
-}
-function _isFirebaseServerApp(obj) {
+function _isFirebaseServerApp2(obj) {
   if (obj === null || obj === void 0) {
     return false;
   }
   return obj.settings !== void 0;
 }
-var ERRORS = {
+var ERRORS2 = {
   [
     "no-app"
     /* AppError.NO_APP */
@@ -1774,279 +1811,18 @@ var ERRORS = {
     /* AppError.INVALID_SERVER_APP_ENVIRONMENT */
   ]: "FirebaseServerApp is not for use in browser environments."
 };
-var ERROR_FACTORY = new ErrorFactory("app", "Firebase", ERRORS);
-var FirebaseAppImpl = class {
-  constructor(options, config, container) {
-    this._isDeleted = false;
-    this._options = Object.assign({}, options);
-    this._config = Object.assign({}, config);
-    this._name = config.name;
-    this._automaticDataCollectionEnabled = config.automaticDataCollectionEnabled;
-    this._container = container;
-    this.container.addComponent(new Component(
-      "app",
-      () => this,
-      "PUBLIC"
-      /* ComponentType.PUBLIC */
-    ));
-  }
-  get automaticDataCollectionEnabled() {
-    this.checkDestroyed();
-    return this._automaticDataCollectionEnabled;
-  }
-  set automaticDataCollectionEnabled(val) {
-    this.checkDestroyed();
-    this._automaticDataCollectionEnabled = val;
-  }
-  get name() {
-    this.checkDestroyed();
-    return this._name;
-  }
-  get options() {
-    this.checkDestroyed();
-    return this._options;
-  }
-  get config() {
-    this.checkDestroyed();
-    return this._config;
-  }
-  get container() {
-    return this._container;
-  }
-  get isDeleted() {
-    return this._isDeleted;
-  }
-  set isDeleted(val) {
-    this._isDeleted = val;
-  }
-  /**
-   * This function will throw an Error if the App has already been deleted -
-   * use before performing API actions on the App.
-   */
-  checkDestroyed() {
-    if (this.isDeleted) {
-      throw ERROR_FACTORY.create("app-deleted", { appName: this._name });
-    }
-  }
-};
-function validateTokenTTL(base64Token, tokenName) {
-  const secondPart = base64Decode(base64Token.split(".")[1]);
-  if (secondPart === null) {
-    console.error(`FirebaseServerApp ${tokenName} is invalid: second part could not be parsed.`);
-    return;
-  }
-  const expClaim = JSON.parse(secondPart).exp;
-  if (expClaim === void 0) {
-    console.error(`FirebaseServerApp ${tokenName} is invalid: expiration claim could not be parsed`);
-    return;
-  }
-  const exp = JSON.parse(secondPart).exp * 1e3;
-  const now = (/* @__PURE__ */ new Date()).getTime();
-  const diff = exp - now;
-  if (diff <= 0) {
-    console.error(`FirebaseServerApp ${tokenName} is invalid: the token has expired.`);
-  }
-}
-var FirebaseServerAppImpl = class extends FirebaseAppImpl {
-  constructor(options, serverConfig, name7, container) {
-    const automaticDataCollectionEnabled = serverConfig.automaticDataCollectionEnabled !== void 0 ? serverConfig.automaticDataCollectionEnabled : true;
-    const config = {
-      name: name7,
-      automaticDataCollectionEnabled
-    };
-    if (options.apiKey !== void 0) {
-      super(options, config, container);
-    } else {
-      const appImpl = options;
-      super(appImpl.options, config, container);
-    }
-    this._serverConfig = Object.assign({ automaticDataCollectionEnabled }, serverConfig);
-    if (this._serverConfig.authIdToken) {
-      validateTokenTTL(this._serverConfig.authIdToken, "authIdToken");
-    }
-    if (this._serverConfig.appCheckToken) {
-      validateTokenTTL(this._serverConfig.appCheckToken, "appCheckToken");
-    }
-    this._finalizationRegistry = null;
-    if (typeof FinalizationRegistry !== "undefined") {
-      this._finalizationRegistry = new FinalizationRegistry(() => {
-        this.automaticCleanup();
-      });
-    }
-    this._refCount = 0;
-    this.incRefCount(this._serverConfig.releaseOnDeref);
-    this._serverConfig.releaseOnDeref = void 0;
-    serverConfig.releaseOnDeref = void 0;
-    registerVersion(name$q, version$1, "serverapp");
-  }
-  toJSON() {
-    return void 0;
-  }
-  get refCount() {
-    return this._refCount;
-  }
-  // Increment the reference count of this server app. If an object is provided, register it
-  // with the finalization registry.
-  incRefCount(obj) {
-    if (this.isDeleted) {
-      return;
-    }
-    this._refCount++;
-    if (obj !== void 0 && this._finalizationRegistry !== null) {
-      this._finalizationRegistry.register(obj, this);
-    }
-  }
-  // Decrement the reference count.
-  decRefCount() {
-    if (this.isDeleted) {
-      return 0;
-    }
-    return --this._refCount;
-  }
-  // Invoked by the FinalizationRegistry callback to note that this app should go through its
-  // reference counts and delete itself if no reference count remain. The coordinating logic that
-  // handles this is in deleteApp(...).
-  automaticCleanup() {
-    void deleteApp(this);
-  }
-  get settings() {
-    this.checkDestroyed();
-    return this._serverConfig;
-  }
-  /**
-   * This function will throw an Error if the App has already been deleted -
-   * use before performing API actions on the App.
-   */
-  checkDestroyed() {
-    if (this.isDeleted) {
-      throw ERROR_FACTORY.create(
-        "server-app-deleted"
-        /* AppError.SERVER_APP_DELETED */
-      );
-    }
-  }
-};
-var SDK_VERSION = version;
-function initializeApp(_options, rawConfig = {}) {
-  let options = _options;
-  if (typeof rawConfig !== "object") {
-    const name8 = rawConfig;
-    rawConfig = { name: name8 };
-  }
-  const config = Object.assign({ name: DEFAULT_ENTRY_NAME2, automaticDataCollectionEnabled: true }, rawConfig);
-  const name7 = config.name;
-  if (typeof name7 !== "string" || !name7) {
-    throw ERROR_FACTORY.create("bad-app-name", {
-      appName: String(name7)
-    });
-  }
-  options || (options = getDefaultAppConfig());
-  if (!options) {
-    throw ERROR_FACTORY.create(
-      "no-options"
-      /* AppError.NO_OPTIONS */
-    );
-  }
-  const existingApp = _apps.get(name7);
-  if (existingApp) {
-    if (deepEqual(options, existingApp.options) && deepEqual(config, existingApp.config)) {
-      return existingApp;
-    } else {
-      throw ERROR_FACTORY.create("duplicate-app", { appName: name7 });
-    }
-  }
-  const container = new ComponentContainer(name7);
-  for (const component of _components.values()) {
-    container.addComponent(component);
-  }
-  const newApp = new FirebaseAppImpl(options, config, container);
-  _apps.set(name7, newApp);
-  return newApp;
-}
-function initializeServerApp(_options, _serverAppConfig) {
-  if (isBrowser() && !isWebWorker()) {
-    throw ERROR_FACTORY.create(
-      "invalid-server-app-environment"
-      /* AppError.INVALID_SERVER_APP_ENVIRONMENT */
-    );
-  }
-  if (_serverAppConfig.automaticDataCollectionEnabled === void 0) {
-    _serverAppConfig.automaticDataCollectionEnabled = true;
-  }
-  let appOptions;
-  if (_isFirebaseApp(_options)) {
-    appOptions = _options.options;
-  } else {
-    appOptions = _options;
-  }
-  const nameObj = Object.assign(Object.assign({}, _serverAppConfig), appOptions);
-  if (nameObj.releaseOnDeref !== void 0) {
-    delete nameObj.releaseOnDeref;
-  }
-  const hashCode = (s) => {
-    return [...s].reduce((hash, c) => Math.imul(31, hash) + c.charCodeAt(0) | 0, 0);
-  };
-  if (_serverAppConfig.releaseOnDeref !== void 0) {
-    if (typeof FinalizationRegistry === "undefined") {
-      throw ERROR_FACTORY.create("finalization-registry-not-supported", {});
-    }
-  }
-  const nameString = "" + hashCode(JSON.stringify(nameObj));
-  const existingApp = _serverApps.get(nameString);
-  if (existingApp) {
-    existingApp.incRefCount(_serverAppConfig.releaseOnDeref);
-    return existingApp;
-  }
-  const container = new ComponentContainer(nameString);
-  for (const component of _components.values()) {
-    container.addComponent(component);
-  }
-  const newApp = new FirebaseServerAppImpl(appOptions, _serverAppConfig, nameString, container);
-  _serverApps.set(nameString, newApp);
-  return newApp;
-}
-function getApp(name7 = DEFAULT_ENTRY_NAME2) {
-  const app = _apps.get(name7);
-  if (!app && name7 === DEFAULT_ENTRY_NAME2 && getDefaultAppConfig()) {
-    return initializeApp();
-  }
-  if (!app) {
-    throw ERROR_FACTORY.create("no-app", { appName: name7 });
-  }
-  return app;
-}
-function getApps() {
-  return Array.from(_apps.values());
-}
-async function deleteApp(app) {
-  let cleanupProviders = false;
-  const name7 = app.name;
-  if (_apps.has(name7)) {
-    cleanupProviders = true;
-    _apps.delete(name7);
-  } else if (_serverApps.has(name7)) {
-    const firebaseServerApp = app;
-    if (firebaseServerApp.decRefCount() <= 0) {
-      _serverApps.delete(name7);
-      cleanupProviders = true;
-    }
-  }
-  if (cleanupProviders) {
-    await Promise.all(app.container.getProviders().map((provider) => provider.delete()));
-    app.isDeleted = true;
-  }
-}
-function registerVersion(libraryKeyOrName, version7, variant) {
-  var _a;
-  let library = (_a = PLATFORM_LOG_STRING[libraryKeyOrName]) !== null && _a !== void 0 ? _a : libraryKeyOrName;
+var ERROR_FACTORY2 = new ErrorFactory2("app", "Firebase", ERRORS2);
+var SDK_VERSION2 = version2;
+function registerVersion2(libraryKeyOrName, version5, variant) {
+  let library = PLATFORM_LOG_STRING[libraryKeyOrName] ?? libraryKeyOrName;
   if (variant) {
     library += `-${variant}`;
   }
   const libraryMismatch = library.match(/\s|\//);
-  const versionMismatch = version7.match(/\s|\//);
+  const versionMismatch = version5.match(/\s|\//);
   if (libraryMismatch || versionMismatch) {
     const warning = [
-      `Unable to register library "${library}" with version "${version7}":`
+      `Unable to register library "${library}" with version "${version5}":`
     ];
     if (libraryMismatch) {
       warning.push(`library name "${library}" contains illegal characters (whitespace or "/")`);
@@ -2055,92 +1831,80 @@ function registerVersion(libraryKeyOrName, version7, variant) {
       warning.push("and");
     }
     if (versionMismatch) {
-      warning.push(`version name "${version7}" contains illegal characters (whitespace or "/")`);
+      warning.push(`version name "${version5}" contains illegal characters (whitespace or "/")`);
     }
-    logger.warn(warning.join(" "));
+    logger2.warn(warning.join(" "));
     return;
   }
-  _registerComponent(new Component(
+  _registerComponent2(new Component2(
     `${library}-version`,
-    () => ({ library, version: version7 }),
+    () => ({ library, version: version5 }),
     "VERSION"
     /* ComponentType.VERSION */
   ));
 }
-function onLog(logCallback, options) {
-  if (logCallback !== null && typeof logCallback !== "function") {
-    throw ERROR_FACTORY.create(
-      "invalid-log-argument"
-      /* AppError.INVALID_LOG_ARGUMENT */
-    );
-  }
-  setUserLogHandler(logCallback, options);
-}
-function setLogLevel2(logLevel) {
-  setLogLevel(logLevel);
-}
-var DB_NAME = "firebase-heartbeat-database";
-var DB_VERSION = 1;
-var STORE_NAME = "firebase-heartbeat-store";
-var dbPromise = null;
+var DB_NAME2 = "firebase-heartbeat-database";
+var DB_VERSION2 = 1;
+var STORE_NAME2 = "firebase-heartbeat-store";
+var dbPromise2 = null;
 function getDbPromise() {
-  if (!dbPromise) {
-    dbPromise = openDB(DB_NAME, DB_VERSION, {
+  if (!dbPromise2) {
+    dbPromise2 = openDB(DB_NAME2, DB_VERSION2, {
       upgrade: (db, oldVersion) => {
         switch (oldVersion) {
           case 0:
             try {
-              db.createObjectStore(STORE_NAME);
+              db.createObjectStore(STORE_NAME2);
             } catch (e) {
               console.warn(e);
             }
         }
       }
     }).catch((e) => {
-      throw ERROR_FACTORY.create("idb-open", {
+      throw ERROR_FACTORY2.create("idb-open", {
         originalErrorMessage: e.message
       });
     });
   }
-  return dbPromise;
+  return dbPromise2;
 }
 async function readHeartbeatsFromIndexedDB(app) {
   try {
     const db = await getDbPromise();
-    const tx = db.transaction(STORE_NAME);
-    const result = await tx.objectStore(STORE_NAME).get(computeKey(app));
+    const tx = db.transaction(STORE_NAME2);
+    const result = await tx.objectStore(STORE_NAME2).get(computeKey2(app));
     await tx.done;
     return result;
   } catch (e) {
-    if (e instanceof FirebaseError) {
-      logger.warn(e.message);
+    if (e instanceof FirebaseError2) {
+      logger2.warn(e.message);
     } else {
-      const idbGetError = ERROR_FACTORY.create("idb-get", {
-        originalErrorMessage: e === null || e === void 0 ? void 0 : e.message
+      const idbGetError = ERROR_FACTORY2.create("idb-get", {
+        originalErrorMessage: e?.message
       });
-      logger.warn(idbGetError.message);
+      logger2.warn(idbGetError.message);
     }
   }
 }
 async function writeHeartbeatsToIndexedDB(app, heartbeatObject) {
   try {
     const db = await getDbPromise();
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const objectStore = tx.objectStore(STORE_NAME);
-    await objectStore.put(heartbeatObject, computeKey(app));
+    const tx = db.transaction(STORE_NAME2, "readwrite");
+    const objectStore = tx.objectStore(STORE_NAME2);
+    await objectStore.put(heartbeatObject, computeKey2(app));
     await tx.done;
   } catch (e) {
-    if (e instanceof FirebaseError) {
-      logger.warn(e.message);
+    if (e instanceof FirebaseError2) {
+      logger2.warn(e.message);
     } else {
-      const idbGetError = ERROR_FACTORY.create("idb-set", {
-        originalErrorMessage: e === null || e === void 0 ? void 0 : e.message
+      const idbGetError = ERROR_FACTORY2.create("idb-set", {
+        originalErrorMessage: e?.message
       });
-      logger.warn(idbGetError.message);
+      logger2.warn(idbGetError.message);
     }
   }
 }
-function computeKey(app) {
+function computeKey2(app) {
   return `${app.name}!${app.options.appId}`;
 }
 var MAX_HEADER_BYTES = 1024;
@@ -2164,14 +1928,13 @@ var HeartbeatServiceImpl = class {
    * already logged, subsequent calls to this function in the same day will be ignored.
    */
   async triggerHeartbeat() {
-    var _a, _b;
     try {
       const platformLogger = this.container.getProvider("platform-logger").getImmediate();
       const agent = platformLogger.getPlatformInfoString();
       const date = getUTCDateString();
-      if (((_a = this._heartbeatsCache) === null || _a === void 0 ? void 0 : _a.heartbeats) == null) {
+      if (this._heartbeatsCache?.heartbeats == null) {
         this._heartbeatsCache = await this._heartbeatsCachePromise;
-        if (((_b = this._heartbeatsCache) === null || _b === void 0 ? void 0 : _b.heartbeats) == null) {
+        if (this._heartbeatsCache?.heartbeats == null) {
           return;
         }
       }
@@ -2186,7 +1949,7 @@ var HeartbeatServiceImpl = class {
       }
       return this._storage.overwrite(this._heartbeatsCache);
     } catch (e) {
-      logger.warn(e);
+      logger2.warn(e);
     }
   }
   /**
@@ -2197,12 +1960,11 @@ var HeartbeatServiceImpl = class {
    * returns an empty string.
    */
   async getHeartbeatsHeader() {
-    var _a;
     try {
       if (this._heartbeatsCache === null) {
         await this._heartbeatsCachePromise;
       }
-      if (((_a = this._heartbeatsCache) === null || _a === void 0 ? void 0 : _a.heartbeats) == null || this._heartbeatsCache.heartbeats.length === 0) {
+      if (this._heartbeatsCache?.heartbeats == null || this._heartbeatsCache.heartbeats.length === 0) {
         return "";
       }
       const date = getUTCDateString();
@@ -2218,7 +1980,7 @@ var HeartbeatServiceImpl = class {
       }
       return headerString;
     } catch (e) {
-      logger.warn(e);
+      logger2.warn(e);
       return "";
     }
   }
@@ -2261,7 +2023,7 @@ var HeartbeatStorageImpl = class {
     this._canUseIndexedDBPromise = this.runIndexedDBEnvironmentCheck();
   }
   async runIndexedDBEnvironmentCheck() {
-    if (!isIndexedDBAvailable()) {
+    if (!isIndexedDBAvailable2()) {
       return false;
     } else {
       return validateIndexedDBOpenable().then(() => true).catch(() => false);
@@ -2276,7 +2038,7 @@ var HeartbeatStorageImpl = class {
       return { heartbeats: [] };
     } else {
       const idbHeartbeatObject = await readHeartbeatsFromIndexedDB(this.app);
-      if (idbHeartbeatObject === null || idbHeartbeatObject === void 0 ? void 0 : idbHeartbeatObject.heartbeats) {
+      if (idbHeartbeatObject?.heartbeats) {
         return idbHeartbeatObject;
       } else {
         return { heartbeats: [] };
@@ -2285,28 +2047,26 @@ var HeartbeatStorageImpl = class {
   }
   // overwrite the storage with the provided heartbeats
   async overwrite(heartbeatsObject) {
-    var _a;
     const canUseIndexedDB = await this._canUseIndexedDBPromise;
     if (!canUseIndexedDB) {
       return;
     } else {
       const existingHeartbeatsObject = await this.read();
       return writeHeartbeatsToIndexedDB(this.app, {
-        lastSentHeartbeatDate: (_a = heartbeatsObject.lastSentHeartbeatDate) !== null && _a !== void 0 ? _a : existingHeartbeatsObject.lastSentHeartbeatDate,
+        lastSentHeartbeatDate: heartbeatsObject.lastSentHeartbeatDate ?? existingHeartbeatsObject.lastSentHeartbeatDate,
         heartbeats: heartbeatsObject.heartbeats
       });
     }
   }
   // add heartbeats
   async add(heartbeatsObject) {
-    var _a;
     const canUseIndexedDB = await this._canUseIndexedDBPromise;
     if (!canUseIndexedDB) {
       return;
     } else {
       const existingHeartbeatsObject = await this.read();
       return writeHeartbeatsToIndexedDB(this.app, {
-        lastSentHeartbeatDate: (_a = heartbeatsObject.lastSentHeartbeatDate) !== null && _a !== void 0 ? _a : existingHeartbeatsObject.lastSentHeartbeatDate,
+        lastSentHeartbeatDate: heartbeatsObject.lastSentHeartbeatDate ?? existingHeartbeatsObject.lastSentHeartbeatDate,
         heartbeats: [
           ...existingHeartbeatsObject.heartbeats,
           ...heartbeatsObject.heartbeats
@@ -2336,2298 +2096,23 @@ function getEarliestHeartbeatIdx(heartbeats) {
   return earliestHeartbeatIdx;
 }
 function registerCoreComponents(variant) {
-  _registerComponent(new Component(
+  _registerComponent2(new Component2(
     "platform-logger",
     (container) => new PlatformLoggerServiceImpl(container),
     "PRIVATE"
     /* ComponentType.PRIVATE */
   ));
-  _registerComponent(new Component(
+  _registerComponent2(new Component2(
     "heartbeat",
     (container) => new HeartbeatServiceImpl(container),
     "PRIVATE"
     /* ComponentType.PRIVATE */
   ));
-  registerVersion(name$q, version$1, variant);
-  registerVersion(name$q, version$1, "esm2017");
-  registerVersion("fire-js", "");
+  registerVersion2(name$q, version$1, variant);
+  registerVersion2(name$q, version$1, "esm2020");
+  registerVersion2("fire-js", "");
 }
 registerCoreComponents("");
-
-// node_modules/@angular/fire/node_modules/firebase/app/dist/esm/index.esm.js
-var name2 = "firebase";
-var version2 = "11.10.0";
-registerVersion(name2, version2, "app");
-
-// node_modules/@angular/fire/fesm2022/angular-fire.mjs
-var VERSION2 = new Version("ANGULARFIRE2_VERSION");
-function ɵgetDefaultInstanceOf(identifier, provided, defaultApp) {
-  if (provided) {
-    if (provided.length === 1) {
-      return provided[0];
-    }
-    const providedUsingDefaultApp = provided.filter((it3) => it3.app === defaultApp);
-    if (providedUsingDefaultApp.length === 1) {
-      return providedUsingDefaultApp[0];
-    }
-  }
-  const defaultAppWithContainer = defaultApp;
-  const provider = defaultAppWithContainer.container.getProvider(identifier);
-  return provider.getImmediate({
-    optional: true
-  });
-}
-var ɵgetAllInstancesOf = (identifier, app) => {
-  const apps = app ? [app] : getApps();
-  const instances3 = [];
-  apps.forEach((app2) => {
-    const provider = app2.container.getProvider(identifier);
-    provider.instances.forEach((instance) => {
-      if (!instances3.includes(instance)) {
-        instances3.push(instance);
-      }
-    });
-  });
-  return instances3;
-};
-var LogLevel2;
-(function(LogLevel4) {
-  LogLevel4[LogLevel4["SILENT"] = 0] = "SILENT";
-  LogLevel4[LogLevel4["WARN"] = 1] = "WARN";
-  LogLevel4[LogLevel4["VERBOSE"] = 2] = "VERBOSE";
-})(LogLevel2 || (LogLevel2 = {}));
-var currentLogLevel = isDevMode() && typeof Zone !== "undefined" ? LogLevel2.WARN : LogLevel2.SILENT;
-var ɵZoneScheduler = class {
-  zone;
-  delegate;
-  constructor(zone, delegate = queueScheduler) {
-    this.zone = zone;
-    this.delegate = delegate;
-  }
-  now() {
-    return this.delegate.now();
-  }
-  schedule(work, delay, state) {
-    const targetZone = this.zone;
-    const workInZone = function(state2) {
-      if (targetZone) {
-        targetZone.runGuarded(() => {
-          work.apply(this, [state2]);
-        });
-      } else {
-        work.apply(this, [state2]);
-      }
-    };
-    return this.delegate.schedule(workInZone, delay, state);
-  }
-};
-var ɵAngularFireSchedulers = class _ɵAngularFireSchedulers {
-  outsideAngular;
-  insideAngular;
-  constructor() {
-    const ngZone = inject(NgZone);
-    this.outsideAngular = ngZone.runOutsideAngular(() => new ɵZoneScheduler(typeof Zone === "undefined" ? void 0 : Zone.current));
-    this.insideAngular = ngZone.run(() => new ɵZoneScheduler(typeof Zone === "undefined" ? void 0 : Zone.current, asyncScheduler));
-  }
-  static ɵfac = function ɵAngularFireSchedulers_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _ɵAngularFireSchedulers)();
-  };
-  static ɵprov = ɵɵdefineInjectable({
-    token: _ɵAngularFireSchedulers,
-    factory: _ɵAngularFireSchedulers.ɵfac,
-    providedIn: "root"
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ɵAngularFireSchedulers, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], () => [], null);
-})();
-var alreadyWarned = false;
-function warnOutsideInjectionContext(original, logLevel) {
-  if (!alreadyWarned && (currentLogLevel > LogLevel2.SILENT || isDevMode())) {
-    alreadyWarned = true;
-    console.warn("Calling Firebase APIs outside of an Injection context may destabilize your application leading to subtle change-detection and hydration bugs. Find more at https://github.com/angular/angularfire/blob/main/docs/zones.md");
-  }
-  if (currentLogLevel >= logLevel) {
-    console.warn(`Firebase API called outside injection context: ${original.name}`);
-  }
-}
-function runOutsideAngular(fn) {
-  const ngZone = inject(NgZone, {
-    optional: true
-  });
-  if (!ngZone) {
-    return fn();
-  }
-  return ngZone.runOutsideAngular(() => fn());
-}
-function run(fn) {
-  const ngZone = inject(NgZone, {
-    optional: true
-  });
-  if (!ngZone) {
-    return fn();
-  }
-  return ngZone.run(() => fn());
-}
-var zoneWrapFn = (it3, taskDone, injector) => {
-  return (...args) => {
-    if (taskDone) {
-      setTimeout(taskDone, 0);
-    }
-    return runInInjectionContext(injector, () => run(() => it3.apply(void 0, args)));
-  };
-};
-var ɵzoneWrap = (it3, blockUntilFirst, logLevel) => {
-  logLevel ||= blockUntilFirst ? LogLevel2.WARN : LogLevel2.VERBOSE;
-  return function() {
-    let taskDone;
-    const _arguments = arguments;
-    let schedulers;
-    let pendingTasks;
-    let injector;
-    try {
-      schedulers = inject(ɵAngularFireSchedulers);
-      pendingTasks = inject(PendingTasks);
-      injector = inject(EnvironmentInjector);
-    } catch (e) {
-      warnOutsideInjectionContext(it3, logLevel);
-      return it3.apply(this, _arguments);
-    }
-    for (let i = 0; i < arguments.length; i++) {
-      if (typeof _arguments[i] === "function") {
-        if (blockUntilFirst) {
-          taskDone ||= run(() => pendingTasks.add());
-        }
-        _arguments[i] = zoneWrapFn(_arguments[i], taskDone, injector);
-      }
-    }
-    const ret = runOutsideAngular(() => it3.apply(this, _arguments));
-    if (!blockUntilFirst) {
-      if (ret instanceof Observable) {
-        return ret.pipe(subscribeOn(schedulers.outsideAngular), observeOn(schedulers.insideAngular));
-      } else {
-        return run(() => ret);
-      }
-    }
-    if (ret instanceof Observable) {
-      return ret.pipe(subscribeOn(schedulers.outsideAngular), observeOn(schedulers.insideAngular), pendingUntilEvent(injector));
-    } else if (ret instanceof Promise) {
-      return run(() => {
-        const removeTask = pendingTasks.add();
-        return new Promise((resolve, reject) => {
-          ret.then((it4) => runInInjectionContext(injector, () => run(() => resolve(it4))), (reason) => runInInjectionContext(injector, () => run(() => reject(reason)))).finally(removeTask);
-        });
-      });
-    } else if (typeof ret === "function" && taskDone) {
-      return function() {
-        setTimeout(taskDone, 0);
-        return ret.apply(this, arguments);
-      };
-    } else {
-      return run(() => ret);
-    }
-  };
-};
-
-// node_modules/@angular/fire/fesm2022/angular-fire-app.mjs
-var FirebaseApp = class {
-  constructor(app) {
-    return app;
-  }
-};
-var FirebaseApps = class {
-  constructor() {
-    return getApps();
-  }
-};
-var firebaseApp$ = timer(0, 300).pipe(concatMap(() => from(getApps())), distinct());
-function defaultFirebaseAppFactory(provided) {
-  if (provided && provided.length === 1) {
-    return provided[0];
-  }
-  return new FirebaseApp(getApp());
-}
-var PROVIDED_FIREBASE_APPS = new InjectionToken("angularfire2._apps");
-var DEFAULT_FIREBASE_APP_PROVIDER = {
-  provide: FirebaseApp,
-  useFactory: defaultFirebaseAppFactory,
-  deps: [[new Optional(), PROVIDED_FIREBASE_APPS]]
-};
-var FIREBASE_APPS_PROVIDER = {
-  provide: FirebaseApps,
-  deps: [[new Optional(), PROVIDED_FIREBASE_APPS]]
-};
-var FirebaseAppModule = class _FirebaseAppModule {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  constructor(platformId) {
-    registerVersion("angularfire", VERSION2.full, "core");
-    registerVersion("angularfire", VERSION2.full, "app");
-    registerVersion("angular", VERSION.full, platformId.toString());
-  }
-  static ɵfac = function FirebaseAppModule_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _FirebaseAppModule)(ɵɵinject(PLATFORM_ID));
-  };
-  static ɵmod = ɵɵdefineNgModule({
-    type: _FirebaseAppModule
-  });
-  static ɵinj = ɵɵdefineInjector({
-    providers: [DEFAULT_FIREBASE_APP_PROVIDER, FIREBASE_APPS_PROVIDER]
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(FirebaseAppModule, [{
-    type: NgModule,
-    args: [{
-      providers: [DEFAULT_FIREBASE_APP_PROVIDER, FIREBASE_APPS_PROVIDER]
-    }]
-  }], () => [{
-    type: Object,
-    decorators: [{
-      type: Inject,
-      args: [PLATFORM_ID]
-    }]
-  }], null);
-})();
-var deleteApp2 = ɵzoneWrap(deleteApp, true);
-var getApp2 = ɵzoneWrap(getApp, true);
-var getApps2 = ɵzoneWrap(getApps, true);
-var initializeApp2 = ɵzoneWrap(initializeApp, true);
-var initializeServerApp2 = ɵzoneWrap(initializeServerApp, true);
-var onLog2 = ɵzoneWrap(onLog, true);
-var registerVersion2 = ɵzoneWrap(registerVersion, true);
-var setLogLevel3 = ɵzoneWrap(setLogLevel2, true);
-
-// node_modules/@angular/fire/node_modules/@firebase/app-check/dist/esm/index.esm2017.js
-var APP_CHECK_STATES = /* @__PURE__ */ new Map();
-var DEFAULT_STATE = {
-  activated: false,
-  tokenObservers: []
-};
-var DEBUG_STATE = {
-  initialized: false,
-  enabled: false
-};
-function getStateReference(app) {
-  return APP_CHECK_STATES.get(app) || Object.assign({}, DEFAULT_STATE);
-}
-function setInitialState(app, state) {
-  APP_CHECK_STATES.set(app, state);
-  return APP_CHECK_STATES.get(app);
-}
-function getDebugState() {
-  return DEBUG_STATE;
-}
-var BASE_ENDPOINT = "https://content-firebaseappcheck.googleapis.com/v1";
-var EXCHANGE_DEBUG_TOKEN_METHOD = "exchangeDebugToken";
-var TOKEN_REFRESH_TIME = {
-  /**
-   * The offset time before token natural expiration to run the refresh.
-   * This is currently 5 minutes.
-   */
-  OFFSET_DURATION: 5 * 60 * 1e3,
-  /**
-   * This is the first retrial wait after an error. This is currently
-   * 30 seconds.
-   */
-  RETRIAL_MIN_WAIT: 30 * 1e3,
-  /**
-   * This is the maximum retrial wait, currently 16 minutes.
-   */
-  RETRIAL_MAX_WAIT: 16 * 60 * 1e3
-};
-var ONE_DAY = 24 * 60 * 60 * 1e3;
-var Refresher = class {
-  constructor(operation, retryPolicy, getWaitDuration, lowerBound, upperBound) {
-    this.operation = operation;
-    this.retryPolicy = retryPolicy;
-    this.getWaitDuration = getWaitDuration;
-    this.lowerBound = lowerBound;
-    this.upperBound = upperBound;
-    this.pending = null;
-    this.nextErrorWaitInterval = lowerBound;
-    if (lowerBound > upperBound) {
-      throw new Error("Proactive refresh lower bound greater than upper bound!");
-    }
-  }
-  start() {
-    this.nextErrorWaitInterval = this.lowerBound;
-    this.process(true).catch(() => {
-    });
-  }
-  stop() {
-    if (this.pending) {
-      this.pending.reject("cancelled");
-      this.pending = null;
-    }
-  }
-  isRunning() {
-    return !!this.pending;
-  }
-  async process(hasSucceeded) {
-    this.stop();
-    try {
-      this.pending = new Deferred();
-      this.pending.promise.catch((_e3) => {
-      });
-      await sleep(this.getNextRun(hasSucceeded));
-      this.pending.resolve();
-      await this.pending.promise;
-      this.pending = new Deferred();
-      this.pending.promise.catch((_e3) => {
-      });
-      await this.operation();
-      this.pending.resolve();
-      await this.pending.promise;
-      this.process(true).catch(() => {
-      });
-    } catch (error) {
-      if (this.retryPolicy(error)) {
-        this.process(false).catch(() => {
-        });
-      } else {
-        this.stop();
-      }
-    }
-  }
-  getNextRun(hasSucceeded) {
-    if (hasSucceeded) {
-      this.nextErrorWaitInterval = this.lowerBound;
-      return this.getWaitDuration();
-    } else {
-      const currentErrorWaitInterval = this.nextErrorWaitInterval;
-      this.nextErrorWaitInterval *= 2;
-      if (this.nextErrorWaitInterval > this.upperBound) {
-        this.nextErrorWaitInterval = this.upperBound;
-      }
-      return currentErrorWaitInterval;
-    }
-  }
-};
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-var ERRORS2 = {
-  [
-    "already-initialized"
-    /* AppCheckError.ALREADY_INITIALIZED */
-  ]: "You have already called initializeAppCheck() for FirebaseApp {$appName} with different options. To avoid this error, call initializeAppCheck() with the same options as when it was originally called. This will return the already initialized instance.",
-  [
-    "use-before-activation"
-    /* AppCheckError.USE_BEFORE_ACTIVATION */
-  ]: "App Check is being used before initializeAppCheck() is called for FirebaseApp {$appName}. Call initializeAppCheck() before instantiating other Firebase services.",
-  [
-    "fetch-network-error"
-    /* AppCheckError.FETCH_NETWORK_ERROR */
-  ]: "Fetch failed to connect to a network. Check Internet connection. Original error: {$originalErrorMessage}.",
-  [
-    "fetch-parse-error"
-    /* AppCheckError.FETCH_PARSE_ERROR */
-  ]: "Fetch client could not parse response. Original error: {$originalErrorMessage}.",
-  [
-    "fetch-status-error"
-    /* AppCheckError.FETCH_STATUS_ERROR */
-  ]: "Fetch server returned an HTTP error status. HTTP status: {$httpStatus}.",
-  [
-    "storage-open"
-    /* AppCheckError.STORAGE_OPEN */
-  ]: "Error thrown when opening storage. Original error: {$originalErrorMessage}.",
-  [
-    "storage-get"
-    /* AppCheckError.STORAGE_GET */
-  ]: "Error thrown when reading from storage. Original error: {$originalErrorMessage}.",
-  [
-    "storage-set"
-    /* AppCheckError.STORAGE_WRITE */
-  ]: "Error thrown when writing to storage. Original error: {$originalErrorMessage}.",
-  [
-    "recaptcha-error"
-    /* AppCheckError.RECAPTCHA_ERROR */
-  ]: "ReCAPTCHA error.",
-  [
-    "initial-throttle"
-    /* AppCheckError.INITIAL_THROTTLE */
-  ]: `{$httpStatus} error. Attempts allowed again after {$time}`,
-  [
-    "throttled"
-    /* AppCheckError.THROTTLED */
-  ]: `Requests throttled due to previous {$httpStatus} error. Attempts allowed again after {$time}`
-};
-var ERROR_FACTORY2 = new ErrorFactory("appCheck", "AppCheck", ERRORS2);
-function ensureActivated(app) {
-  if (!getStateReference(app).activated) {
-    throw ERROR_FACTORY2.create("use-before-activation", {
-      appName: app.name
-    });
-  }
-}
-async function exchangeToken({ url, body }, heartbeatServiceProvider) {
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  const heartbeatService = heartbeatServiceProvider.getImmediate({
-    optional: true
-  });
-  if (heartbeatService) {
-    const heartbeatsHeader = await heartbeatService.getHeartbeatsHeader();
-    if (heartbeatsHeader) {
-      headers["X-Firebase-Client"] = heartbeatsHeader;
-    }
-  }
-  const options = {
-    method: "POST",
-    body: JSON.stringify(body),
-    headers
-  };
-  let response;
-  try {
-    response = await fetch(url, options);
-  } catch (originalError) {
-    throw ERROR_FACTORY2.create("fetch-network-error", {
-      originalErrorMessage: originalError === null || originalError === void 0 ? void 0 : originalError.message
-    });
-  }
-  if (response.status !== 200) {
-    throw ERROR_FACTORY2.create("fetch-status-error", {
-      httpStatus: response.status
-    });
-  }
-  let responseBody;
-  try {
-    responseBody = await response.json();
-  } catch (originalError) {
-    throw ERROR_FACTORY2.create("fetch-parse-error", {
-      originalErrorMessage: originalError === null || originalError === void 0 ? void 0 : originalError.message
-    });
-  }
-  const match = responseBody.ttl.match(/^([\d.]+)(s)$/);
-  if (!match || !match[2] || isNaN(Number(match[1]))) {
-    throw ERROR_FACTORY2.create("fetch-parse-error", {
-      originalErrorMessage: `ttl field (timeToLive) is not in standard Protobuf Duration format: ${responseBody.ttl}`
-    });
-  }
-  const timeToLiveAsNumber = Number(match[1]) * 1e3;
-  const now = Date.now();
-  return {
-    token: responseBody.token,
-    expireTimeMillis: now + timeToLiveAsNumber,
-    issuedAtTimeMillis: now
-  };
-}
-function getExchangeDebugTokenRequest(app, debugToken) {
-  const { projectId, appId, apiKey } = app.options;
-  return {
-    url: `${BASE_ENDPOINT}/projects/${projectId}/apps/${appId}:${EXCHANGE_DEBUG_TOKEN_METHOD}?key=${apiKey}`,
-    body: {
-      // eslint-disable-next-line
-      debug_token: debugToken
-    }
-  };
-}
-var DB_NAME2 = "firebase-app-check-database";
-var DB_VERSION2 = 1;
-var STORE_NAME2 = "firebase-app-check-store";
-var DEBUG_TOKEN_KEY = "debug-token";
-var dbPromise2 = null;
-function getDBPromise() {
-  if (dbPromise2) {
-    return dbPromise2;
-  }
-  dbPromise2 = new Promise((resolve, reject) => {
-    try {
-      const request = indexedDB.open(DB_NAME2, DB_VERSION2);
-      request.onsuccess = (event) => {
-        resolve(event.target.result);
-      };
-      request.onerror = (event) => {
-        var _a;
-        reject(ERROR_FACTORY2.create("storage-open", {
-          originalErrorMessage: (_a = event.target.error) === null || _a === void 0 ? void 0 : _a.message
-        }));
-      };
-      request.onupgradeneeded = (event) => {
-        const db = event.target.result;
-        switch (event.oldVersion) {
-          case 0:
-            db.createObjectStore(STORE_NAME2, {
-              keyPath: "compositeKey"
-            });
-        }
-      };
-    } catch (e) {
-      reject(ERROR_FACTORY2.create("storage-open", {
-        originalErrorMessage: e === null || e === void 0 ? void 0 : e.message
-      }));
-    }
-  });
-  return dbPromise2;
-}
-function readTokenFromIndexedDB(app) {
-  return read(computeKey2(app));
-}
-function writeTokenToIndexedDB(app, token) {
-  return write(computeKey2(app), token);
-}
-function writeDebugTokenToIndexedDB(token) {
-  return write(DEBUG_TOKEN_KEY, token);
-}
-function readDebugTokenFromIndexedDB() {
-  return read(DEBUG_TOKEN_KEY);
-}
-async function write(key, value) {
-  const db = await getDBPromise();
-  const transaction = db.transaction(STORE_NAME2, "readwrite");
-  const store = transaction.objectStore(STORE_NAME2);
-  const request = store.put({
-    compositeKey: key,
-    value
-  });
-  return new Promise((resolve, reject) => {
-    request.onsuccess = (_event) => {
-      resolve();
-    };
-    transaction.onerror = (event) => {
-      var _a;
-      reject(ERROR_FACTORY2.create("storage-set", {
-        originalErrorMessage: (_a = event.target.error) === null || _a === void 0 ? void 0 : _a.message
-      }));
-    };
-  });
-}
-async function read(key) {
-  const db = await getDBPromise();
-  const transaction = db.transaction(STORE_NAME2, "readonly");
-  const store = transaction.objectStore(STORE_NAME2);
-  const request = store.get(key);
-  return new Promise((resolve, reject) => {
-    request.onsuccess = (event) => {
-      const result = event.target.result;
-      if (result) {
-        resolve(result.value);
-      } else {
-        resolve(void 0);
-      }
-    };
-    transaction.onerror = (event) => {
-      var _a;
-      reject(ERROR_FACTORY2.create("storage-get", {
-        originalErrorMessage: (_a = event.target.error) === null || _a === void 0 ? void 0 : _a.message
-      }));
-    };
-  });
-}
-function computeKey2(app) {
-  return `${app.options.appId}-${app.name}`;
-}
-var logger2 = new Logger("@firebase/app-check");
-async function readTokenFromStorage(app) {
-  if (isIndexedDBAvailable()) {
-    let token = void 0;
-    try {
-      token = await readTokenFromIndexedDB(app);
-    } catch (e) {
-      logger2.warn(`Failed to read token from IndexedDB. Error: ${e}`);
-    }
-    return token;
-  }
-  return void 0;
-}
-function writeTokenToStorage(app, token) {
-  if (isIndexedDBAvailable()) {
-    return writeTokenToIndexedDB(app, token).catch((e) => {
-      logger2.warn(`Failed to write token to IndexedDB. Error: ${e}`);
-    });
-  }
-  return Promise.resolve();
-}
-async function readOrCreateDebugTokenFromStorage() {
-  let existingDebugToken = void 0;
-  try {
-    existingDebugToken = await readDebugTokenFromIndexedDB();
-  } catch (_e3) {
-  }
-  if (!existingDebugToken) {
-    const newToken = crypto.randomUUID();
-    writeDebugTokenToIndexedDB(newToken).catch((e) => logger2.warn(`Failed to persist debug token to IndexedDB. Error: ${e}`));
-    return newToken;
-  } else {
-    return existingDebugToken;
-  }
-}
-function isDebugMode() {
-  const debugState = getDebugState();
-  return debugState.enabled;
-}
-async function getDebugToken() {
-  const state = getDebugState();
-  if (state.enabled && state.token) {
-    return state.token.promise;
-  } else {
-    throw Error(`
-            Can't get debug token in production mode.
-        `);
-  }
-}
-function initializeDebugMode() {
-  const globals = getGlobal();
-  const debugState = getDebugState();
-  debugState.initialized = true;
-  if (typeof globals.FIREBASE_APPCHECK_DEBUG_TOKEN !== "string" && globals.FIREBASE_APPCHECK_DEBUG_TOKEN !== true) {
-    return;
-  }
-  debugState.enabled = true;
-  const deferredToken = new Deferred();
-  debugState.token = deferredToken;
-  if (typeof globals.FIREBASE_APPCHECK_DEBUG_TOKEN === "string") {
-    deferredToken.resolve(globals.FIREBASE_APPCHECK_DEBUG_TOKEN);
-  } else {
-    deferredToken.resolve(readOrCreateDebugTokenFromStorage());
-  }
-}
-var defaultTokenErrorData = { error: "UNKNOWN_ERROR" };
-function formatDummyToken(tokenErrorData) {
-  return base64.encodeString(
-    JSON.stringify(tokenErrorData),
-    /* webSafe= */
-    false
-  );
-}
-async function getToken$2(appCheck, forceRefresh = false, shouldLogErrors = false) {
-  const app = appCheck.app;
-  ensureActivated(app);
-  const state = getStateReference(app);
-  let token = state.token;
-  let error = void 0;
-  if (token && !isValid(token)) {
-    state.token = void 0;
-    token = void 0;
-  }
-  if (!token) {
-    const cachedToken = await state.cachedTokenPromise;
-    if (cachedToken) {
-      if (isValid(cachedToken)) {
-        token = cachedToken;
-      } else {
-        await writeTokenToStorage(app, void 0);
-      }
-    }
-  }
-  if (!forceRefresh && token && isValid(token)) {
-    return {
-      token: token.token
-    };
-  }
-  let shouldCallListeners = false;
-  if (isDebugMode()) {
-    try {
-      if (!state.exchangeTokenPromise) {
-        state.exchangeTokenPromise = exchangeToken(getExchangeDebugTokenRequest(app, await getDebugToken()), appCheck.heartbeatServiceProvider).finally(() => {
-          state.exchangeTokenPromise = void 0;
-        });
-        shouldCallListeners = true;
-      }
-      const tokenFromDebugExchange = await state.exchangeTokenPromise;
-      await writeTokenToStorage(app, tokenFromDebugExchange);
-      state.token = tokenFromDebugExchange;
-      return { token: tokenFromDebugExchange.token };
-    } catch (e) {
-      if (e.code === `appCheck/${"throttled"}` || e.code === `appCheck/${"initial-throttle"}`) {
-        logger2.warn(e.message);
-      } else if (shouldLogErrors) {
-        logger2.error(e);
-      }
-      return makeDummyTokenResult(e);
-    }
-  }
-  try {
-    if (!state.exchangeTokenPromise) {
-      state.exchangeTokenPromise = state.provider.getToken().finally(() => {
-        state.exchangeTokenPromise = void 0;
-      });
-      shouldCallListeners = true;
-    }
-    token = await getStateReference(app).exchangeTokenPromise;
-  } catch (e) {
-    if (e.code === `appCheck/${"throttled"}` || e.code === `appCheck/${"initial-throttle"}`) {
-      logger2.warn(e.message);
-    } else if (shouldLogErrors) {
-      logger2.error(e);
-    }
-    error = e;
-  }
-  let interopTokenResult;
-  if (!token) {
-    interopTokenResult = makeDummyTokenResult(error);
-  } else if (error) {
-    if (isValid(token)) {
-      interopTokenResult = {
-        token: token.token,
-        internalError: error
-      };
-    } else {
-      interopTokenResult = makeDummyTokenResult(error);
-    }
-  } else {
-    interopTokenResult = {
-      token: token.token
-    };
-    state.token = token;
-    await writeTokenToStorage(app, token);
-  }
-  if (shouldCallListeners) {
-    notifyTokenListeners(app, interopTokenResult);
-  }
-  return interopTokenResult;
-}
-async function getLimitedUseToken$1(appCheck) {
-  const app = appCheck.app;
-  ensureActivated(app);
-  const { provider } = getStateReference(app);
-  if (isDebugMode()) {
-    const debugToken = await getDebugToken();
-    const { token } = await exchangeToken(getExchangeDebugTokenRequest(app, debugToken), appCheck.heartbeatServiceProvider);
-    return { token };
-  } else {
-    const { token } = await provider.getToken();
-    return { token };
-  }
-}
-function addTokenListener(appCheck, type, listener, onError) {
-  const { app } = appCheck;
-  const state = getStateReference(app);
-  const tokenObserver = {
-    next: listener,
-    error: onError,
-    type
-  };
-  state.tokenObservers = [...state.tokenObservers, tokenObserver];
-  if (state.token && isValid(state.token)) {
-    const validToken = state.token;
-    Promise.resolve().then(() => {
-      listener({ token: validToken.token });
-      initTokenRefresher(appCheck);
-    }).catch(() => {
-    });
-  }
-  void state.cachedTokenPromise.then(() => initTokenRefresher(appCheck));
-}
-function removeTokenListener(app, listener) {
-  const state = getStateReference(app);
-  const newObservers = state.tokenObservers.filter((tokenObserver) => tokenObserver.next !== listener);
-  if (newObservers.length === 0 && state.tokenRefresher && state.tokenRefresher.isRunning()) {
-    state.tokenRefresher.stop();
-  }
-  state.tokenObservers = newObservers;
-}
-function initTokenRefresher(appCheck) {
-  const { app } = appCheck;
-  const state = getStateReference(app);
-  let refresher = state.tokenRefresher;
-  if (!refresher) {
-    refresher = createTokenRefresher(appCheck);
-    state.tokenRefresher = refresher;
-  }
-  if (!refresher.isRunning() && state.isTokenAutoRefreshEnabled) {
-    refresher.start();
-  }
-}
-function createTokenRefresher(appCheck) {
-  const { app } = appCheck;
-  return new Refresher(
-    // Keep in mind when this fails for any reason other than the ones
-    // for which we should retry, it will effectively stop the proactive refresh.
-    async () => {
-      const state = getStateReference(app);
-      let result;
-      if (!state.token) {
-        result = await getToken$2(appCheck);
-      } else {
-        result = await getToken$2(appCheck, true);
-      }
-      if (result.error) {
-        throw result.error;
-      }
-      if (result.internalError) {
-        throw result.internalError;
-      }
-    },
-    () => {
-      return true;
-    },
-    () => {
-      const state = getStateReference(app);
-      if (state.token) {
-        let nextRefreshTimeMillis = state.token.issuedAtTimeMillis + (state.token.expireTimeMillis - state.token.issuedAtTimeMillis) * 0.5 + 5 * 60 * 1e3;
-        const latestAllowableRefresh = state.token.expireTimeMillis - 5 * 60 * 1e3;
-        nextRefreshTimeMillis = Math.min(nextRefreshTimeMillis, latestAllowableRefresh);
-        return Math.max(0, nextRefreshTimeMillis - Date.now());
-      } else {
-        return 0;
-      }
-    },
-    TOKEN_REFRESH_TIME.RETRIAL_MIN_WAIT,
-    TOKEN_REFRESH_TIME.RETRIAL_MAX_WAIT
-  );
-}
-function notifyTokenListeners(app, token) {
-  const observers = getStateReference(app).tokenObservers;
-  for (const observer of observers) {
-    try {
-      if (observer.type === "EXTERNAL" && token.error != null) {
-        observer.error(token.error);
-      } else {
-        observer.next(token);
-      }
-    } catch (e) {
-    }
-  }
-}
-function isValid(token) {
-  return token.expireTimeMillis - Date.now() > 0;
-}
-function makeDummyTokenResult(error) {
-  return {
-    token: formatDummyToken(defaultTokenErrorData),
-    error
-  };
-}
-var AppCheckService = class {
-  constructor(app, heartbeatServiceProvider) {
-    this.app = app;
-    this.heartbeatServiceProvider = heartbeatServiceProvider;
-  }
-  _delete() {
-    const { tokenObservers } = getStateReference(this.app);
-    for (const tokenObserver of tokenObservers) {
-      removeTokenListener(this.app, tokenObserver.next);
-    }
-    return Promise.resolve();
-  }
-};
-function factory(app, heartbeatServiceProvider) {
-  return new AppCheckService(app, heartbeatServiceProvider);
-}
-function internalFactory(appCheck) {
-  return {
-    getToken: (forceRefresh) => getToken$2(appCheck, forceRefresh),
-    getLimitedUseToken: () => getLimitedUseToken$1(appCheck),
-    addTokenListener: (listener) => addTokenListener(appCheck, "INTERNAL", listener),
-    removeTokenListener: (listener) => removeTokenListener(appCheck.app, listener)
-  };
-}
-var name3 = "@firebase/app-check";
-var version3 = "0.10.1";
-function initializeAppCheck(app = getApp(), options) {
-  app = getModularInstance(app);
-  const provider = _getProvider(app, "app-check");
-  if (!getDebugState().initialized) {
-    initializeDebugMode();
-  }
-  if (isDebugMode()) {
-    void getDebugToken().then((token) => (
-      // Not using logger because I don't think we ever want this accidentally hidden.
-      console.log(`App Check debug token: ${token}. You will need to add it to your app's App Check settings in the Firebase console for it to work.`)
-    ));
-  }
-  if (provider.isInitialized()) {
-    const existingInstance = provider.getImmediate();
-    const initialOptions = provider.getOptions();
-    if (initialOptions.isTokenAutoRefreshEnabled === options.isTokenAutoRefreshEnabled && initialOptions.provider.isEqual(options.provider)) {
-      return existingInstance;
-    } else {
-      throw ERROR_FACTORY2.create("already-initialized", {
-        appName: app.name
-      });
-    }
-  }
-  const appCheck = provider.initialize({ options });
-  _activate(app, options.provider, options.isTokenAutoRefreshEnabled);
-  if (getStateReference(app).isTokenAutoRefreshEnabled) {
-    addTokenListener(appCheck, "INTERNAL", () => {
-    });
-  }
-  return appCheck;
-}
-function _activate(app, provider, isTokenAutoRefreshEnabled = false) {
-  const state = setInitialState(app, Object.assign({}, DEFAULT_STATE));
-  state.activated = true;
-  state.provider = provider;
-  state.cachedTokenPromise = readTokenFromStorage(app).then((cachedToken) => {
-    if (cachedToken && isValid(cachedToken)) {
-      state.token = cachedToken;
-      notifyTokenListeners(app, { token: cachedToken.token });
-    }
-    return cachedToken;
-  });
-  state.isTokenAutoRefreshEnabled = isTokenAutoRefreshEnabled && app.automaticDataCollectionEnabled;
-  if (!app.automaticDataCollectionEnabled && isTokenAutoRefreshEnabled) {
-    logger2.warn("`isTokenAutoRefreshEnabled` is true but `automaticDataCollectionEnabled` was set to false during `initializeApp()`. This blocks automatic token refresh.");
-  }
-  state.provider.initialize(app);
-}
-function setTokenAutoRefreshEnabled(appCheckInstance, isTokenAutoRefreshEnabled) {
-  const app = appCheckInstance.app;
-  const state = getStateReference(app);
-  if (state.tokenRefresher) {
-    if (isTokenAutoRefreshEnabled === true) {
-      state.tokenRefresher.start();
-    } else {
-      state.tokenRefresher.stop();
-    }
-  }
-  state.isTokenAutoRefreshEnabled = isTokenAutoRefreshEnabled;
-}
-async function getToken(appCheckInstance, forceRefresh) {
-  const result = await getToken$2(appCheckInstance, forceRefresh);
-  if (result.error) {
-    throw result.error;
-  }
-  if (result.internalError) {
-    throw result.internalError;
-  }
-  return { token: result.token };
-}
-function getLimitedUseToken(appCheckInstance) {
-  return getLimitedUseToken$1(appCheckInstance);
-}
-function onTokenChanged(appCheckInstance, onNextOrObserver, onError, onCompletion) {
-  let nextFn = () => {
-  };
-  let errorFn = () => {
-  };
-  if (onNextOrObserver.next != null) {
-    nextFn = onNextOrObserver.next.bind(onNextOrObserver);
-  } else {
-    nextFn = onNextOrObserver;
-  }
-  if (onNextOrObserver.error != null) {
-    errorFn = onNextOrObserver.error.bind(onNextOrObserver);
-  } else if (onError) {
-    errorFn = onError;
-  }
-  addTokenListener(appCheckInstance, "EXTERNAL", nextFn, errorFn);
-  return () => removeTokenListener(appCheckInstance.app, nextFn);
-}
-var APP_CHECK_NAME = "app-check";
-var APP_CHECK_NAME_INTERNAL = "app-check-internal";
-function registerAppCheck() {
-  _registerComponent(new Component(
-    APP_CHECK_NAME,
-    (container) => {
-      const app = container.getProvider("app").getImmediate();
-      const heartbeatServiceProvider = container.getProvider("heartbeat");
-      return factory(app, heartbeatServiceProvider);
-    },
-    "PUBLIC"
-    /* ComponentType.PUBLIC */
-  ).setInstantiationMode(
-    "EXPLICIT"
-    /* InstantiationMode.EXPLICIT */
-  ).setInstanceCreatedCallback((container, _identifier, _appcheckService) => {
-    container.getProvider(APP_CHECK_NAME_INTERNAL).initialize();
-  }));
-  _registerComponent(new Component(
-    APP_CHECK_NAME_INTERNAL,
-    (container) => {
-      const appCheck = container.getProvider("app-check").getImmediate();
-      return internalFactory(appCheck);
-    },
-    "PUBLIC"
-    /* ComponentType.PUBLIC */
-  ).setInstantiationMode(
-    "EXPLICIT"
-    /* InstantiationMode.EXPLICIT */
-  ));
-  registerVersion(name3, version3);
-}
-registerAppCheck();
-
-// node_modules/@angular/fire/fesm2022/angular-fire-app-check.mjs
-var APP_CHECK_PROVIDER_NAME = "app-check";
-var AppCheck = class {
-  constructor(appCheck) {
-    return appCheck;
-  }
-};
-var AppCheckInstances = class {
-  constructor() {
-    return ɵgetAllInstancesOf(APP_CHECK_PROVIDER_NAME);
-  }
-};
-var appCheckInstance$ = timer(0, 300).pipe(concatMap(() => from(ɵgetAllInstancesOf(APP_CHECK_PROVIDER_NAME))), distinct());
-var PROVIDED_APP_CHECK_INSTANCES = new InjectionToken("angularfire2.app-check-instances");
-function defaultAppCheckInstanceFactory(provided, defaultApp) {
-  const defaultAppCheck = ɵgetDefaultInstanceOf(APP_CHECK_PROVIDER_NAME, provided, defaultApp);
-  return defaultAppCheck && new AppCheck(defaultAppCheck);
-}
-var LOCALHOSTS = ["localhost", "0.0.0.0", "127.0.0.1"];
-var isLocalhost = typeof window !== "undefined" && LOCALHOSTS.includes(window.location.hostname);
-var APP_CHECK_INSTANCES_PROVIDER = {
-  provide: AppCheckInstances,
-  deps: [[new Optional(), PROVIDED_APP_CHECK_INSTANCES]]
-};
-var DEFAULT_APP_CHECK_INSTANCE_PROVIDER = {
-  provide: AppCheck,
-  useFactory: defaultAppCheckInstanceFactory,
-  deps: [[new Optional(), PROVIDED_APP_CHECK_INSTANCES], FirebaseApp, PLATFORM_ID]
-};
-var AppCheckModule = class _AppCheckModule {
-  constructor() {
-    registerVersion("angularfire", VERSION2.full, "app-check");
-  }
-  static ɵfac = function AppCheckModule_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _AppCheckModule)();
-  };
-  static ɵmod = ɵɵdefineNgModule({
-    type: _AppCheckModule
-  });
-  static ɵinj = ɵɵdefineInjector({
-    providers: [DEFAULT_APP_CHECK_INSTANCE_PROVIDER, APP_CHECK_INSTANCES_PROVIDER]
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AppCheckModule, [{
-    type: NgModule,
-    args: [{
-      providers: [DEFAULT_APP_CHECK_INSTANCE_PROVIDER, APP_CHECK_INSTANCES_PROVIDER]
-    }]
-  }], () => [], null);
-})();
-var getLimitedUseToken2 = ɵzoneWrap(getLimitedUseToken, true, 2);
-var getToken2 = ɵzoneWrap(getToken, true);
-var initializeAppCheck2 = ɵzoneWrap(initializeAppCheck, true);
-var onTokenChanged2 = ɵzoneWrap(onTokenChanged, true);
-var setTokenAutoRefreshEnabled2 = ɵzoneWrap(setTokenAutoRefreshEnabled, true);
-
-// node_modules/@firebase/util/dist/postinstall.mjs
-var getDefaultsFromPostinstall2 = () => void 0;
-
-// node_modules/@firebase/util/dist/index.esm.js
-var stringToByteArray$12 = function(str) {
-  const out = [];
-  let p = 0;
-  for (let i = 0; i < str.length; i++) {
-    let c = str.charCodeAt(i);
-    if (c < 128) {
-      out[p++] = c;
-    } else if (c < 2048) {
-      out[p++] = c >> 6 | 192;
-      out[p++] = c & 63 | 128;
-    } else if ((c & 64512) === 55296 && i + 1 < str.length && (str.charCodeAt(i + 1) & 64512) === 56320) {
-      c = 65536 + ((c & 1023) << 10) + (str.charCodeAt(++i) & 1023);
-      out[p++] = c >> 18 | 240;
-      out[p++] = c >> 12 & 63 | 128;
-      out[p++] = c >> 6 & 63 | 128;
-      out[p++] = c & 63 | 128;
-    } else {
-      out[p++] = c >> 12 | 224;
-      out[p++] = c >> 6 & 63 | 128;
-      out[p++] = c & 63 | 128;
-    }
-  }
-  return out;
-};
-var byteArrayToString2 = function(bytes) {
-  const out = [];
-  let pos = 0, c = 0;
-  while (pos < bytes.length) {
-    const c1 = bytes[pos++];
-    if (c1 < 128) {
-      out[c++] = String.fromCharCode(c1);
-    } else if (c1 > 191 && c1 < 224) {
-      const c2 = bytes[pos++];
-      out[c++] = String.fromCharCode((c1 & 31) << 6 | c2 & 63);
-    } else if (c1 > 239 && c1 < 365) {
-      const c2 = bytes[pos++];
-      const c3 = bytes[pos++];
-      const c4 = bytes[pos++];
-      const u = ((c1 & 7) << 18 | (c2 & 63) << 12 | (c3 & 63) << 6 | c4 & 63) - 65536;
-      out[c++] = String.fromCharCode(55296 + (u >> 10));
-      out[c++] = String.fromCharCode(56320 + (u & 1023));
-    } else {
-      const c2 = bytes[pos++];
-      const c3 = bytes[pos++];
-      out[c++] = String.fromCharCode((c1 & 15) << 12 | (c2 & 63) << 6 | c3 & 63);
-    }
-  }
-  return out.join("");
-};
-var base642 = {
-  /**
-   * Maps bytes to characters.
-   */
-  byteToCharMap_: null,
-  /**
-   * Maps characters to bytes.
-   */
-  charToByteMap_: null,
-  /**
-   * Maps bytes to websafe characters.
-   * @private
-   */
-  byteToCharMapWebSafe_: null,
-  /**
-   * Maps websafe characters to bytes.
-   * @private
-   */
-  charToByteMapWebSafe_: null,
-  /**
-   * Our default alphabet, shared between
-   * ENCODED_VALS and ENCODED_VALS_WEBSAFE
-   */
-  ENCODED_VALS_BASE: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-  /**
-   * Our default alphabet. Value 64 (=) is special; it means "nothing."
-   */
-  get ENCODED_VALS() {
-    return this.ENCODED_VALS_BASE + "+/=";
-  },
-  /**
-   * Our websafe alphabet.
-   */
-  get ENCODED_VALS_WEBSAFE() {
-    return this.ENCODED_VALS_BASE + "-_.";
-  },
-  /**
-   * Whether this browser supports the atob and btoa functions. This extension
-   * started at Mozilla but is now implemented by many browsers. We use the
-   * ASSUME_* variables to avoid pulling in the full useragent detection library
-   * but still allowing the standard per-browser compilations.
-   *
-   */
-  HAS_NATIVE_SUPPORT: typeof atob === "function",
-  /**
-   * Base64-encode an array of bytes.
-   *
-   * @param input An array of bytes (numbers with
-   *     value in [0, 255]) to encode.
-   * @param webSafe Boolean indicating we should use the
-   *     alternative alphabet.
-   * @return The base64 encoded string.
-   */
-  encodeByteArray(input, webSafe) {
-    if (!Array.isArray(input)) {
-      throw Error("encodeByteArray takes an array as a parameter");
-    }
-    this.init_();
-    const byteToCharMap = webSafe ? this.byteToCharMapWebSafe_ : this.byteToCharMap_;
-    const output = [];
-    for (let i = 0; i < input.length; i += 3) {
-      const byte1 = input[i];
-      const haveByte2 = i + 1 < input.length;
-      const byte2 = haveByte2 ? input[i + 1] : 0;
-      const haveByte3 = i + 2 < input.length;
-      const byte3 = haveByte3 ? input[i + 2] : 0;
-      const outByte1 = byte1 >> 2;
-      const outByte2 = (byte1 & 3) << 4 | byte2 >> 4;
-      let outByte3 = (byte2 & 15) << 2 | byte3 >> 6;
-      let outByte4 = byte3 & 63;
-      if (!haveByte3) {
-        outByte4 = 64;
-        if (!haveByte2) {
-          outByte3 = 64;
-        }
-      }
-      output.push(byteToCharMap[outByte1], byteToCharMap[outByte2], byteToCharMap[outByte3], byteToCharMap[outByte4]);
-    }
-    return output.join("");
-  },
-  /**
-   * Base64-encode a string.
-   *
-   * @param input A string to encode.
-   * @param webSafe If true, we should use the
-   *     alternative alphabet.
-   * @return The base64 encoded string.
-   */
-  encodeString(input, webSafe) {
-    if (this.HAS_NATIVE_SUPPORT && !webSafe) {
-      return btoa(input);
-    }
-    return this.encodeByteArray(stringToByteArray$12(input), webSafe);
-  },
-  /**
-   * Base64-decode a string.
-   *
-   * @param input to decode.
-   * @param webSafe True if we should use the
-   *     alternative alphabet.
-   * @return string representing the decoded value.
-   */
-  decodeString(input, webSafe) {
-    if (this.HAS_NATIVE_SUPPORT && !webSafe) {
-      return atob(input);
-    }
-    return byteArrayToString2(this.decodeStringToByteArray(input, webSafe));
-  },
-  /**
-   * Base64-decode a string.
-   *
-   * In base-64 decoding, groups of four characters are converted into three
-   * bytes.  If the encoder did not apply padding, the input length may not
-   * be a multiple of 4.
-   *
-   * In this case, the last group will have fewer than 4 characters, and
-   * padding will be inferred.  If the group has one or two characters, it decodes
-   * to one byte.  If the group has three characters, it decodes to two bytes.
-   *
-   * @param input Input to decode.
-   * @param webSafe True if we should use the web-safe alphabet.
-   * @return bytes representing the decoded value.
-   */
-  decodeStringToByteArray(input, webSafe) {
-    this.init_();
-    const charToByteMap = webSafe ? this.charToByteMapWebSafe_ : this.charToByteMap_;
-    const output = [];
-    for (let i = 0; i < input.length; ) {
-      const byte1 = charToByteMap[input.charAt(i++)];
-      const haveByte2 = i < input.length;
-      const byte2 = haveByte2 ? charToByteMap[input.charAt(i)] : 0;
-      ++i;
-      const haveByte3 = i < input.length;
-      const byte3 = haveByte3 ? charToByteMap[input.charAt(i)] : 64;
-      ++i;
-      const haveByte4 = i < input.length;
-      const byte4 = haveByte4 ? charToByteMap[input.charAt(i)] : 64;
-      ++i;
-      if (byte1 == null || byte2 == null || byte3 == null || byte4 == null) {
-        throw new DecodeBase64StringError2();
-      }
-      const outByte1 = byte1 << 2 | byte2 >> 4;
-      output.push(outByte1);
-      if (byte3 !== 64) {
-        const outByte2 = byte2 << 4 & 240 | byte3 >> 2;
-        output.push(outByte2);
-        if (byte4 !== 64) {
-          const outByte3 = byte3 << 6 & 192 | byte4;
-          output.push(outByte3);
-        }
-      }
-    }
-    return output;
-  },
-  /**
-   * Lazy static initialization function. Called before
-   * accessing any of the static map variables.
-   * @private
-   */
-  init_() {
-    if (!this.byteToCharMap_) {
-      this.byteToCharMap_ = {};
-      this.charToByteMap_ = {};
-      this.byteToCharMapWebSafe_ = {};
-      this.charToByteMapWebSafe_ = {};
-      for (let i = 0; i < this.ENCODED_VALS.length; i++) {
-        this.byteToCharMap_[i] = this.ENCODED_VALS.charAt(i);
-        this.charToByteMap_[this.byteToCharMap_[i]] = i;
-        this.byteToCharMapWebSafe_[i] = this.ENCODED_VALS_WEBSAFE.charAt(i);
-        this.charToByteMapWebSafe_[this.byteToCharMapWebSafe_[i]] = i;
-        if (i >= this.ENCODED_VALS_BASE.length) {
-          this.charToByteMap_[this.ENCODED_VALS_WEBSAFE.charAt(i)] = i;
-          this.charToByteMapWebSafe_[this.ENCODED_VALS.charAt(i)] = i;
-        }
-      }
-    }
-  }
-};
-var DecodeBase64StringError2 = class extends Error {
-  constructor() {
-    super(...arguments);
-    this.name = "DecodeBase64StringError";
-  }
-};
-var base64Encode2 = function(str) {
-  const utf8Bytes = stringToByteArray$12(str);
-  return base642.encodeByteArray(utf8Bytes, true);
-};
-var base64urlEncodeWithoutPadding2 = function(str) {
-  return base64Encode2(str).replace(/\./g, "");
-};
-var base64Decode2 = function(str) {
-  try {
-    return base642.decodeString(str, true);
-  } catch (e) {
-    console.error("base64Decode failed: ", e);
-  }
-  return null;
-};
-function getGlobal2() {
-  if (typeof self !== "undefined") {
-    return self;
-  }
-  if (typeof window !== "undefined") {
-    return window;
-  }
-  if (typeof global !== "undefined") {
-    return global;
-  }
-  throw new Error("Unable to locate global object.");
-}
-var getDefaultsFromGlobal2 = () => getGlobal2().__FIREBASE_DEFAULTS__;
-var getDefaultsFromEnvVariable2 = () => {
-  if (typeof process === "undefined" || typeof process.env === "undefined") {
-    return;
-  }
-  const defaultsJsonString = process.env.__FIREBASE_DEFAULTS__;
-  if (defaultsJsonString) {
-    return JSON.parse(defaultsJsonString);
-  }
-};
-var getDefaultsFromCookie2 = () => {
-  if (typeof document === "undefined") {
-    return;
-  }
-  let match;
-  try {
-    match = document.cookie.match(/__FIREBASE_DEFAULTS__=([^;]+)/);
-  } catch (e) {
-    return;
-  }
-  const decoded = match && base64Decode2(match[1]);
-  return decoded && JSON.parse(decoded);
-};
-var getDefaults2 = () => {
-  try {
-    return getDefaultsFromPostinstall2() || getDefaultsFromGlobal2() || getDefaultsFromEnvVariable2() || getDefaultsFromCookie2();
-  } catch (e) {
-    console.info(`Unable to get __FIREBASE_DEFAULTS__ due to: ${e}`);
-    return;
-  }
-};
-var getExperimentalSetting2 = (name7) => getDefaults2()?.[`_${name7}`];
-function isCloudWorkstation2(url) {
-  try {
-    const host = url.startsWith("http://") || url.startsWith("https://") ? new URL(url).hostname : url;
-    return host.endsWith(".cloudworkstations.dev");
-  } catch {
-    return false;
-  }
-}
-function getUA2() {
-  if (typeof navigator !== "undefined" && typeof navigator["userAgent"] === "string") {
-    return navigator["userAgent"];
-  } else {
-    return "";
-  }
-}
-function isMobileCordova2() {
-  return typeof window !== "undefined" && // @ts-ignore Setting up an broadly applicable index signature for Window
-  // just to deal with this case would probably be a bad idea.
-  !!(window["cordova"] || window["phonegap"] || window["PhoneGap"]) && /ios|iphone|ipod|ipad|android|blackberry|iemobile/i.test(getUA2());
-}
-function isNode2() {
-  const forceEnvironment = getDefaults2()?.forceEnvironment;
-  if (forceEnvironment === "node") {
-    return true;
-  } else if (forceEnvironment === "browser") {
-    return false;
-  }
-  try {
-    return Object.prototype.toString.call(global.process) === "[object process]";
-  } catch (e) {
-    return false;
-  }
-}
-function isCloudflareWorker2() {
-  return typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
-}
-function isBrowserExtension2() {
-  const runtime = typeof chrome === "object" ? chrome.runtime : typeof browser === "object" ? browser.runtime : void 0;
-  return typeof runtime === "object" && runtime.id !== void 0;
-}
-function isReactNative2() {
-  return typeof navigator === "object" && navigator["product"] === "ReactNative";
-}
-function isIE2() {
-  const ua = getUA2();
-  return ua.indexOf("MSIE ") >= 0 || ua.indexOf("Trident/") >= 0;
-}
-function isSafari2() {
-  return !isNode2() && !!navigator.userAgent && navigator.userAgent.includes("Safari") && !navigator.userAgent.includes("Chrome");
-}
-function isIndexedDBAvailable2() {
-  try {
-    return typeof indexedDB === "object";
-  } catch (e) {
-    return false;
-  }
-}
-function validateIndexedDBOpenable2() {
-  return new Promise((resolve, reject) => {
-    try {
-      let preExist = true;
-      const DB_CHECK_NAME = "validate-browser-context-for-indexeddb-analytics-module";
-      const request = self.indexedDB.open(DB_CHECK_NAME);
-      request.onsuccess = () => {
-        request.result.close();
-        if (!preExist) {
-          self.indexedDB.deleteDatabase(DB_CHECK_NAME);
-        }
-        resolve(true);
-      };
-      request.onupgradeneeded = () => {
-        preExist = false;
-      };
-      request.onerror = () => {
-        reject(request.error?.message || "");
-      };
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
-var ERROR_NAME2 = "FirebaseError";
-var FirebaseError2 = class _FirebaseError extends Error {
-  constructor(code, message, customData) {
-    super(message);
-    this.code = code;
-    this.customData = customData;
-    this.name = ERROR_NAME2;
-    Object.setPrototypeOf(this, _FirebaseError.prototype);
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ErrorFactory2.prototype.create);
-    }
-  }
-};
-var ErrorFactory2 = class {
-  constructor(service, serviceName, errors) {
-    this.service = service;
-    this.serviceName = serviceName;
-    this.errors = errors;
-  }
-  create(code, ...data) {
-    const customData = data[0] || {};
-    const fullCode = `${this.service}/${code}`;
-    const template = this.errors[code];
-    const message = template ? replaceTemplate2(template, customData) : "Error";
-    const fullMessage = `${this.serviceName}: ${message} (${fullCode}).`;
-    const error = new FirebaseError2(fullCode, fullMessage, customData);
-    return error;
-  }
-};
-function replaceTemplate2(template, data) {
-  return template.replace(PATTERN2, (_, key) => {
-    const value = data[key];
-    return value != null ? String(value) : `<${key}?>`;
-  });
-}
-var PATTERN2 = /\{\$([^}]+)}/g;
-function querystring2(querystringParams) {
-  const params = [];
-  for (const [key, value] of Object.entries(querystringParams)) {
-    if (Array.isArray(value)) {
-      value.forEach((arrayVal) => {
-        params.push(encodeURIComponent(key) + "=" + encodeURIComponent(arrayVal));
-      });
-    } else {
-      params.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
-    }
-  }
-  return params.length ? "&" + params.join("&") : "";
-}
-function querystringDecode2(querystring3) {
-  const obj = {};
-  const tokens = querystring3.replace(/^\?/, "").split("&");
-  tokens.forEach((token) => {
-    if (token) {
-      const [key, value] = token.split("=");
-      obj[decodeURIComponent(key)] = decodeURIComponent(value);
-    }
-  });
-  return obj;
-}
-function extractQuerystring2(url) {
-  const queryStart = url.indexOf("?");
-  if (!queryStart) {
-    return "";
-  }
-  const fragmentStart = url.indexOf("#", queryStart);
-  return url.substring(queryStart, fragmentStart > 0 ? fragmentStart : void 0);
-}
-function createSubscribe2(executor, onNoObservers) {
-  const proxy = new ObserverProxy2(executor, onNoObservers);
-  return proxy.subscribe.bind(proxy);
-}
-var ObserverProxy2 = class {
-  /**
-   * @param executor Function which can make calls to a single Observer
-   *     as a proxy.
-   * @param onNoObservers Callback when count of Observers goes to zero.
-   */
-  constructor(executor, onNoObservers) {
-    this.observers = [];
-    this.unsubscribes = [];
-    this.observerCount = 0;
-    this.task = Promise.resolve();
-    this.finalized = false;
-    this.onNoObservers = onNoObservers;
-    this.task.then(() => {
-      executor(this);
-    }).catch((e) => {
-      this.error(e);
-    });
-  }
-  next(value) {
-    this.forEachObserver((observer) => {
-      observer.next(value);
-    });
-  }
-  error(error) {
-    this.forEachObserver((observer) => {
-      observer.error(error);
-    });
-    this.close(error);
-  }
-  complete() {
-    this.forEachObserver((observer) => {
-      observer.complete();
-    });
-    this.close();
-  }
-  /**
-   * Subscribe function that can be used to add an Observer to the fan-out list.
-   *
-   * - We require that no event is sent to a subscriber synchronously to their
-   *   call to subscribe().
-   */
-  subscribe(nextOrObserver, error, complete) {
-    let observer;
-    if (nextOrObserver === void 0 && error === void 0 && complete === void 0) {
-      throw new Error("Missing Observer.");
-    }
-    if (implementsAnyMethods2(nextOrObserver, [
-      "next",
-      "error",
-      "complete"
-    ])) {
-      observer = nextOrObserver;
-    } else {
-      observer = {
-        next: nextOrObserver,
-        error,
-        complete
-      };
-    }
-    if (observer.next === void 0) {
-      observer.next = noop2;
-    }
-    if (observer.error === void 0) {
-      observer.error = noop2;
-    }
-    if (observer.complete === void 0) {
-      observer.complete = noop2;
-    }
-    const unsub = this.unsubscribeOne.bind(this, this.observers.length);
-    if (this.finalized) {
-      this.task.then(() => {
-        try {
-          if (this.finalError) {
-            observer.error(this.finalError);
-          } else {
-            observer.complete();
-          }
-        } catch (e) {
-        }
-        return;
-      });
-    }
-    this.observers.push(observer);
-    return unsub;
-  }
-  // Unsubscribe is synchronous - we guarantee that no events are sent to
-  // any unsubscribed Observer.
-  unsubscribeOne(i) {
-    if (this.observers === void 0 || this.observers[i] === void 0) {
-      return;
-    }
-    delete this.observers[i];
-    this.observerCount -= 1;
-    if (this.observerCount === 0 && this.onNoObservers !== void 0) {
-      this.onNoObservers(this);
-    }
-  }
-  forEachObserver(fn) {
-    if (this.finalized) {
-      return;
-    }
-    for (let i = 0; i < this.observers.length; i++) {
-      this.sendOne(i, fn);
-    }
-  }
-  // Call the Observer via one of it's callback function. We are careful to
-  // confirm that the observe has not been unsubscribed since this asynchronous
-  // function had been queued.
-  sendOne(i, fn) {
-    this.task.then(() => {
-      if (this.observers !== void 0 && this.observers[i] !== void 0) {
-        try {
-          fn(this.observers[i]);
-        } catch (e) {
-          if (typeof console !== "undefined" && console.error) {
-            console.error(e);
-          }
-        }
-      }
-    });
-  }
-  close(err) {
-    if (this.finalized) {
-      return;
-    }
-    this.finalized = true;
-    if (err !== void 0) {
-      this.finalError = err;
-    }
-    this.task.then(() => {
-      this.observers = void 0;
-      this.onNoObservers = void 0;
-    });
-  }
-};
-function implementsAnyMethods2(obj, methods) {
-  if (typeof obj !== "object" || obj === null) {
-    return false;
-  }
-  for (const method of methods) {
-    if (method in obj && typeof obj[method] === "function") {
-      return true;
-    }
-  }
-  return false;
-}
-function noop2() {
-}
-var MAX_VALUE_MILLIS2 = 4 * 60 * 60 * 1e3;
-function getModularInstance2(service) {
-  if (service && service._delegate) {
-    return service._delegate;
-  } else {
-    return service;
-  }
-}
-
-// node_modules/@firebase/component/dist/esm/index.esm.js
-var Component2 = class {
-  /**
-   *
-   * @param name The public service name, e.g. app, auth, firestore, database
-   * @param instanceFactory Service factory responsible for creating the public interface
-   * @param type whether the service provided by the component is public or private
-   */
-  constructor(name7, instanceFactory, type) {
-    this.name = name7;
-    this.instanceFactory = instanceFactory;
-    this.type = type;
-    this.multipleInstances = false;
-    this.serviceProps = {};
-    this.instantiationMode = "LAZY";
-    this.onInstanceCreated = null;
-  }
-  setInstantiationMode(mode) {
-    this.instantiationMode = mode;
-    return this;
-  }
-  setMultipleInstances(multipleInstances) {
-    this.multipleInstances = multipleInstances;
-    return this;
-  }
-  setServiceProps(props) {
-    this.serviceProps = props;
-    return this;
-  }
-  setInstanceCreatedCallback(callback) {
-    this.onInstanceCreated = callback;
-    return this;
-  }
-};
-
-// node_modules/@firebase/logger/dist/esm/index.esm.js
-var instances2 = [];
-var LogLevel3;
-(function(LogLevel4) {
-  LogLevel4[LogLevel4["DEBUG"] = 0] = "DEBUG";
-  LogLevel4[LogLevel4["VERBOSE"] = 1] = "VERBOSE";
-  LogLevel4[LogLevel4["INFO"] = 2] = "INFO";
-  LogLevel4[LogLevel4["WARN"] = 3] = "WARN";
-  LogLevel4[LogLevel4["ERROR"] = 4] = "ERROR";
-  LogLevel4[LogLevel4["SILENT"] = 5] = "SILENT";
-})(LogLevel3 || (LogLevel3 = {}));
-var levelStringToEnum2 = {
-  "debug": LogLevel3.DEBUG,
-  "verbose": LogLevel3.VERBOSE,
-  "info": LogLevel3.INFO,
-  "warn": LogLevel3.WARN,
-  "error": LogLevel3.ERROR,
-  "silent": LogLevel3.SILENT
-};
-var defaultLogLevel2 = LogLevel3.INFO;
-var ConsoleMethod2 = {
-  [LogLevel3.DEBUG]: "log",
-  [LogLevel3.VERBOSE]: "log",
-  [LogLevel3.INFO]: "info",
-  [LogLevel3.WARN]: "warn",
-  [LogLevel3.ERROR]: "error"
-};
-var defaultLogHandler2 = (instance, logType, ...args) => {
-  if (logType < instance.logLevel) {
-    return;
-  }
-  const now = (/* @__PURE__ */ new Date()).toISOString();
-  const method = ConsoleMethod2[logType];
-  if (method) {
-    console[method](`[${now}]  ${instance.name}:`, ...args);
-  } else {
-    throw new Error(`Attempted to log a message with an invalid logType (value: ${logType})`);
-  }
-};
-var Logger2 = class {
-  /**
-   * Gives you an instance of a Logger to capture messages according to
-   * Firebase's logging scheme.
-   *
-   * @param name The name that the logs will be associated with
-   */
-  constructor(name7) {
-    this.name = name7;
-    this._logLevel = defaultLogLevel2;
-    this._logHandler = defaultLogHandler2;
-    this._userLogHandler = null;
-    instances2.push(this);
-  }
-  get logLevel() {
-    return this._logLevel;
-  }
-  set logLevel(val) {
-    if (!(val in LogLevel3)) {
-      throw new TypeError(`Invalid value "${val}" assigned to \`logLevel\``);
-    }
-    this._logLevel = val;
-  }
-  // Workaround for setter/getter having to be the same type.
-  setLogLevel(val) {
-    this._logLevel = typeof val === "string" ? levelStringToEnum2[val] : val;
-  }
-  get logHandler() {
-    return this._logHandler;
-  }
-  set logHandler(val) {
-    if (typeof val !== "function") {
-      throw new TypeError("Value assigned to `logHandler` must be a function");
-    }
-    this._logHandler = val;
-  }
-  get userLogHandler() {
-    return this._userLogHandler;
-  }
-  set userLogHandler(val) {
-    this._userLogHandler = val;
-  }
-  /**
-   * The functions below are all based on the `console` interface
-   */
-  debug(...args) {
-    this._userLogHandler && this._userLogHandler(this, LogLevel3.DEBUG, ...args);
-    this._logHandler(this, LogLevel3.DEBUG, ...args);
-  }
-  log(...args) {
-    this._userLogHandler && this._userLogHandler(this, LogLevel3.VERBOSE, ...args);
-    this._logHandler(this, LogLevel3.VERBOSE, ...args);
-  }
-  info(...args) {
-    this._userLogHandler && this._userLogHandler(this, LogLevel3.INFO, ...args);
-    this._logHandler(this, LogLevel3.INFO, ...args);
-  }
-  warn(...args) {
-    this._userLogHandler && this._userLogHandler(this, LogLevel3.WARN, ...args);
-    this._logHandler(this, LogLevel3.WARN, ...args);
-  }
-  error(...args) {
-    this._userLogHandler && this._userLogHandler(this, LogLevel3.ERROR, ...args);
-    this._logHandler(this, LogLevel3.ERROR, ...args);
-  }
-};
-
-// node_modules/@firebase/app/dist/esm/index.esm.js
-var PlatformLoggerServiceImpl2 = class {
-  constructor(container) {
-    this.container = container;
-  }
-  // In initial implementation, this will be called by installations on
-  // auth token refresh, and installations will send this string.
-  getPlatformInfoString() {
-    const providers = this.container.getProviders();
-    return providers.map((provider) => {
-      if (isVersionServiceProvider2(provider)) {
-        const service = provider.getImmediate();
-        return `${service.library}/${service.version}`;
-      } else {
-        return null;
-      }
-    }).filter((logString) => logString).join(" ");
-  }
-};
-function isVersionServiceProvider2(provider) {
-  const component = provider.getComponent();
-  return component?.type === "VERSION";
-}
-var name$q2 = "@firebase/app";
-var version$12 = "0.14.7";
-var logger3 = new Logger2("@firebase/app");
-var name$p2 = "@firebase/app-compat";
-var name$o2 = "@firebase/analytics-compat";
-var name$n2 = "@firebase/analytics";
-var name$m2 = "@firebase/app-check-compat";
-var name$l2 = "@firebase/app-check";
-var name$k2 = "@firebase/auth";
-var name$j2 = "@firebase/auth-compat";
-var name$i2 = "@firebase/database";
-var name$h2 = "@firebase/data-connect";
-var name$g2 = "@firebase/database-compat";
-var name$f2 = "@firebase/functions";
-var name$e2 = "@firebase/functions-compat";
-var name$d2 = "@firebase/installations";
-var name$c2 = "@firebase/installations-compat";
-var name$b2 = "@firebase/messaging";
-var name$a2 = "@firebase/messaging-compat";
-var name$92 = "@firebase/performance";
-var name$82 = "@firebase/performance-compat";
-var name$72 = "@firebase/remote-config";
-var name$62 = "@firebase/remote-config-compat";
-var name$52 = "@firebase/storage";
-var name$42 = "@firebase/storage-compat";
-var name$32 = "@firebase/firestore";
-var name$22 = "@firebase/ai";
-var name$12 = "@firebase/firestore-compat";
-var name4 = "firebase";
-var version4 = "12.8.0";
-var PLATFORM_LOG_STRING2 = {
-  [name$q2]: "fire-core",
-  [name$p2]: "fire-core-compat",
-  [name$n2]: "fire-analytics",
-  [name$o2]: "fire-analytics-compat",
-  [name$l2]: "fire-app-check",
-  [name$m2]: "fire-app-check-compat",
-  [name$k2]: "fire-auth",
-  [name$j2]: "fire-auth-compat",
-  [name$i2]: "fire-rtdb",
-  [name$h2]: "fire-data-connect",
-  [name$g2]: "fire-rtdb-compat",
-  [name$f2]: "fire-fn",
-  [name$e2]: "fire-fn-compat",
-  [name$d2]: "fire-iid",
-  [name$c2]: "fire-iid-compat",
-  [name$b2]: "fire-fcm",
-  [name$a2]: "fire-fcm-compat",
-  [name$92]: "fire-perf",
-  [name$82]: "fire-perf-compat",
-  [name$72]: "fire-rc",
-  [name$62]: "fire-rc-compat",
-  [name$52]: "fire-gcs",
-  [name$42]: "fire-gcs-compat",
-  [name$32]: "fire-fst",
-  [name$12]: "fire-fst-compat",
-  [name$22]: "fire-vertex",
-  "fire-js": "fire-js",
-  // Platform identifier for JS SDK.
-  [name4]: "fire-js-all"
-};
-var _apps2 = /* @__PURE__ */ new Map();
-var _serverApps2 = /* @__PURE__ */ new Map();
-var _components2 = /* @__PURE__ */ new Map();
-function _addComponent2(app, component) {
-  try {
-    app.container.addComponent(component);
-  } catch (e) {
-    logger3.debug(`Component ${component.name} failed to register with FirebaseApp ${app.name}`, e);
-  }
-}
-function _registerComponent2(component) {
-  const componentName = component.name;
-  if (_components2.has(componentName)) {
-    logger3.debug(`There were multiple attempts to register component ${componentName}.`);
-    return false;
-  }
-  _components2.set(componentName, component);
-  for (const app of _apps2.values()) {
-    _addComponent2(app, component);
-  }
-  for (const serverApp of _serverApps2.values()) {
-    _addComponent2(serverApp, component);
-  }
-  return true;
-}
-function _isFirebaseServerApp2(obj) {
-  if (obj === null || obj === void 0) {
-    return false;
-  }
-  return obj.settings !== void 0;
-}
-var ERRORS3 = {
-  [
-    "no-app"
-    /* AppError.NO_APP */
-  ]: "No Firebase App '{$appName}' has been created - call initializeApp() first",
-  [
-    "bad-app-name"
-    /* AppError.BAD_APP_NAME */
-  ]: "Illegal App name: '{$appName}'",
-  [
-    "duplicate-app"
-    /* AppError.DUPLICATE_APP */
-  ]: "Firebase App named '{$appName}' already exists with different options or config",
-  [
-    "app-deleted"
-    /* AppError.APP_DELETED */
-  ]: "Firebase App named '{$appName}' already deleted",
-  [
-    "server-app-deleted"
-    /* AppError.SERVER_APP_DELETED */
-  ]: "Firebase Server App has been deleted",
-  [
-    "no-options"
-    /* AppError.NO_OPTIONS */
-  ]: "Need to provide options, when not being deployed to hosting via source.",
-  [
-    "invalid-app-argument"
-    /* AppError.INVALID_APP_ARGUMENT */
-  ]: "firebase.{$appName}() takes either no argument or a Firebase App instance.",
-  [
-    "invalid-log-argument"
-    /* AppError.INVALID_LOG_ARGUMENT */
-  ]: "First argument to `onLog` must be null or a function.",
-  [
-    "idb-open"
-    /* AppError.IDB_OPEN */
-  ]: "Error thrown when opening IndexedDB. Original error: {$originalErrorMessage}.",
-  [
-    "idb-get"
-    /* AppError.IDB_GET */
-  ]: "Error thrown when reading from IndexedDB. Original error: {$originalErrorMessage}.",
-  [
-    "idb-set"
-    /* AppError.IDB_WRITE */
-  ]: "Error thrown when writing to IndexedDB. Original error: {$originalErrorMessage}.",
-  [
-    "idb-delete"
-    /* AppError.IDB_DELETE */
-  ]: "Error thrown when deleting from IndexedDB. Original error: {$originalErrorMessage}.",
-  [
-    "finalization-registry-not-supported"
-    /* AppError.FINALIZATION_REGISTRY_NOT_SUPPORTED */
-  ]: "FirebaseServerApp deleteOnDeref field defined but the JS runtime does not support FinalizationRegistry.",
-  [
-    "invalid-server-app-environment"
-    /* AppError.INVALID_SERVER_APP_ENVIRONMENT */
-  ]: "FirebaseServerApp is not for use in browser environments."
-};
-var ERROR_FACTORY3 = new ErrorFactory2("app", "Firebase", ERRORS3);
-var SDK_VERSION2 = version4;
-function registerVersion3(libraryKeyOrName, version7, variant) {
-  let library = PLATFORM_LOG_STRING2[libraryKeyOrName] ?? libraryKeyOrName;
-  if (variant) {
-    library += `-${variant}`;
-  }
-  const libraryMismatch = library.match(/\s|\//);
-  const versionMismatch = version7.match(/\s|\//);
-  if (libraryMismatch || versionMismatch) {
-    const warning = [
-      `Unable to register library "${library}" with version "${version7}":`
-    ];
-    if (libraryMismatch) {
-      warning.push(`library name "${library}" contains illegal characters (whitespace or "/")`);
-    }
-    if (libraryMismatch && versionMismatch) {
-      warning.push("and");
-    }
-    if (versionMismatch) {
-      warning.push(`version name "${version7}" contains illegal characters (whitespace or "/")`);
-    }
-    logger3.warn(warning.join(" "));
-    return;
-  }
-  _registerComponent2(new Component2(
-    `${library}-version`,
-    () => ({ library, version: version7 }),
-    "VERSION"
-    /* ComponentType.VERSION */
-  ));
-}
-var DB_NAME3 = "firebase-heartbeat-database";
-var DB_VERSION3 = 1;
-var STORE_NAME3 = "firebase-heartbeat-store";
-var dbPromise3 = null;
-function getDbPromise2() {
-  if (!dbPromise3) {
-    dbPromise3 = openDB(DB_NAME3, DB_VERSION3, {
-      upgrade: (db, oldVersion) => {
-        switch (oldVersion) {
-          case 0:
-            try {
-              db.createObjectStore(STORE_NAME3);
-            } catch (e) {
-              console.warn(e);
-            }
-        }
-      }
-    }).catch((e) => {
-      throw ERROR_FACTORY3.create("idb-open", {
-        originalErrorMessage: e.message
-      });
-    });
-  }
-  return dbPromise3;
-}
-async function readHeartbeatsFromIndexedDB2(app) {
-  try {
-    const db = await getDbPromise2();
-    const tx = db.transaction(STORE_NAME3);
-    const result = await tx.objectStore(STORE_NAME3).get(computeKey3(app));
-    await tx.done;
-    return result;
-  } catch (e) {
-    if (e instanceof FirebaseError2) {
-      logger3.warn(e.message);
-    } else {
-      const idbGetError = ERROR_FACTORY3.create("idb-get", {
-        originalErrorMessage: e?.message
-      });
-      logger3.warn(idbGetError.message);
-    }
-  }
-}
-async function writeHeartbeatsToIndexedDB2(app, heartbeatObject) {
-  try {
-    const db = await getDbPromise2();
-    const tx = db.transaction(STORE_NAME3, "readwrite");
-    const objectStore = tx.objectStore(STORE_NAME3);
-    await objectStore.put(heartbeatObject, computeKey3(app));
-    await tx.done;
-  } catch (e) {
-    if (e instanceof FirebaseError2) {
-      logger3.warn(e.message);
-    } else {
-      const idbGetError = ERROR_FACTORY3.create("idb-set", {
-        originalErrorMessage: e?.message
-      });
-      logger3.warn(idbGetError.message);
-    }
-  }
-}
-function computeKey3(app) {
-  return `${app.name}!${app.options.appId}`;
-}
-var MAX_HEADER_BYTES2 = 1024;
-var MAX_NUM_STORED_HEARTBEATS2 = 30;
-var HeartbeatServiceImpl2 = class {
-  constructor(container) {
-    this.container = container;
-    this._heartbeatsCache = null;
-    const app = this.container.getProvider("app").getImmediate();
-    this._storage = new HeartbeatStorageImpl2(app);
-    this._heartbeatsCachePromise = this._storage.read().then((result) => {
-      this._heartbeatsCache = result;
-      return result;
-    });
-  }
-  /**
-   * Called to report a heartbeat. The function will generate
-   * a HeartbeatsByUserAgent object, update heartbeatsCache, and persist it
-   * to IndexedDB.
-   * Note that we only store one heartbeat per day. So if a heartbeat for today is
-   * already logged, subsequent calls to this function in the same day will be ignored.
-   */
-  async triggerHeartbeat() {
-    try {
-      const platformLogger = this.container.getProvider("platform-logger").getImmediate();
-      const agent = platformLogger.getPlatformInfoString();
-      const date = getUTCDateString2();
-      if (this._heartbeatsCache?.heartbeats == null) {
-        this._heartbeatsCache = await this._heartbeatsCachePromise;
-        if (this._heartbeatsCache?.heartbeats == null) {
-          return;
-        }
-      }
-      if (this._heartbeatsCache.lastSentHeartbeatDate === date || this._heartbeatsCache.heartbeats.some((singleDateHeartbeat) => singleDateHeartbeat.date === date)) {
-        return;
-      } else {
-        this._heartbeatsCache.heartbeats.push({ date, agent });
-        if (this._heartbeatsCache.heartbeats.length > MAX_NUM_STORED_HEARTBEATS2) {
-          const earliestHeartbeatIdx = getEarliestHeartbeatIdx2(this._heartbeatsCache.heartbeats);
-          this._heartbeatsCache.heartbeats.splice(earliestHeartbeatIdx, 1);
-        }
-      }
-      return this._storage.overwrite(this._heartbeatsCache);
-    } catch (e) {
-      logger3.warn(e);
-    }
-  }
-  /**
-   * Returns a base64 encoded string which can be attached to the heartbeat-specific header directly.
-   * It also clears all heartbeats from memory as well as in IndexedDB.
-   *
-   * NOTE: Consuming product SDKs should not send the header if this method
-   * returns an empty string.
-   */
-  async getHeartbeatsHeader() {
-    try {
-      if (this._heartbeatsCache === null) {
-        await this._heartbeatsCachePromise;
-      }
-      if (this._heartbeatsCache?.heartbeats == null || this._heartbeatsCache.heartbeats.length === 0) {
-        return "";
-      }
-      const date = getUTCDateString2();
-      const { heartbeatsToSend, unsentEntries } = extractHeartbeatsForHeader2(this._heartbeatsCache.heartbeats);
-      const headerString = base64urlEncodeWithoutPadding2(JSON.stringify({ version: 2, heartbeats: heartbeatsToSend }));
-      this._heartbeatsCache.lastSentHeartbeatDate = date;
-      if (unsentEntries.length > 0) {
-        this._heartbeatsCache.heartbeats = unsentEntries;
-        await this._storage.overwrite(this._heartbeatsCache);
-      } else {
-        this._heartbeatsCache.heartbeats = [];
-        void this._storage.overwrite(this._heartbeatsCache);
-      }
-      return headerString;
-    } catch (e) {
-      logger3.warn(e);
-      return "";
-    }
-  }
-};
-function getUTCDateString2() {
-  const today = /* @__PURE__ */ new Date();
-  return today.toISOString().substring(0, 10);
-}
-function extractHeartbeatsForHeader2(heartbeatsCache, maxSize = MAX_HEADER_BYTES2) {
-  const heartbeatsToSend = [];
-  let unsentEntries = heartbeatsCache.slice();
-  for (const singleDateHeartbeat of heartbeatsCache) {
-    const heartbeatEntry = heartbeatsToSend.find((hb) => hb.agent === singleDateHeartbeat.agent);
-    if (!heartbeatEntry) {
-      heartbeatsToSend.push({
-        agent: singleDateHeartbeat.agent,
-        dates: [singleDateHeartbeat.date]
-      });
-      if (countBytes2(heartbeatsToSend) > maxSize) {
-        heartbeatsToSend.pop();
-        break;
-      }
-    } else {
-      heartbeatEntry.dates.push(singleDateHeartbeat.date);
-      if (countBytes2(heartbeatsToSend) > maxSize) {
-        heartbeatEntry.dates.pop();
-        break;
-      }
-    }
-    unsentEntries = unsentEntries.slice(1);
-  }
-  return {
-    heartbeatsToSend,
-    unsentEntries
-  };
-}
-var HeartbeatStorageImpl2 = class {
-  constructor(app) {
-    this.app = app;
-    this._canUseIndexedDBPromise = this.runIndexedDBEnvironmentCheck();
-  }
-  async runIndexedDBEnvironmentCheck() {
-    if (!isIndexedDBAvailable2()) {
-      return false;
-    } else {
-      return validateIndexedDBOpenable2().then(() => true).catch(() => false);
-    }
-  }
-  /**
-   * Read all heartbeats.
-   */
-  async read() {
-    const canUseIndexedDB = await this._canUseIndexedDBPromise;
-    if (!canUseIndexedDB) {
-      return { heartbeats: [] };
-    } else {
-      const idbHeartbeatObject = await readHeartbeatsFromIndexedDB2(this.app);
-      if (idbHeartbeatObject?.heartbeats) {
-        return idbHeartbeatObject;
-      } else {
-        return { heartbeats: [] };
-      }
-    }
-  }
-  // overwrite the storage with the provided heartbeats
-  async overwrite(heartbeatsObject) {
-    const canUseIndexedDB = await this._canUseIndexedDBPromise;
-    if (!canUseIndexedDB) {
-      return;
-    } else {
-      const existingHeartbeatsObject = await this.read();
-      return writeHeartbeatsToIndexedDB2(this.app, {
-        lastSentHeartbeatDate: heartbeatsObject.lastSentHeartbeatDate ?? existingHeartbeatsObject.lastSentHeartbeatDate,
-        heartbeats: heartbeatsObject.heartbeats
-      });
-    }
-  }
-  // add heartbeats
-  async add(heartbeatsObject) {
-    const canUseIndexedDB = await this._canUseIndexedDBPromise;
-    if (!canUseIndexedDB) {
-      return;
-    } else {
-      const existingHeartbeatsObject = await this.read();
-      return writeHeartbeatsToIndexedDB2(this.app, {
-        lastSentHeartbeatDate: heartbeatsObject.lastSentHeartbeatDate ?? existingHeartbeatsObject.lastSentHeartbeatDate,
-        heartbeats: [
-          ...existingHeartbeatsObject.heartbeats,
-          ...heartbeatsObject.heartbeats
-        ]
-      });
-    }
-  }
-};
-function countBytes2(heartbeatsCache) {
-  return base64urlEncodeWithoutPadding2(
-    // heartbeatsCache wrapper properties
-    JSON.stringify({ version: 2, heartbeats: heartbeatsCache })
-  ).length;
-}
-function getEarliestHeartbeatIdx2(heartbeats) {
-  if (heartbeats.length === 0) {
-    return -1;
-  }
-  let earliestHeartbeatIdx = 0;
-  let earliestHeartbeatDate = heartbeats[0].date;
-  for (let i = 1; i < heartbeats.length; i++) {
-    if (heartbeats[i].date < earliestHeartbeatDate) {
-      earliestHeartbeatDate = heartbeats[i].date;
-      earliestHeartbeatIdx = i;
-    }
-  }
-  return earliestHeartbeatIdx;
-}
-function registerCoreComponents2(variant) {
-  _registerComponent2(new Component2(
-    "platform-logger",
-    (container) => new PlatformLoggerServiceImpl2(container),
-    "PRIVATE"
-    /* ComponentType.PRIVATE */
-  ));
-  _registerComponent2(new Component2(
-    "heartbeat",
-    (container) => new HeartbeatServiceImpl2(container),
-    "PRIVATE"
-    /* ComponentType.PRIVATE */
-  ));
-  registerVersion3(name$q2, version$12, variant);
-  registerVersion3(name$q2, version$12, "esm2020");
-  registerVersion3("fire-js", "");
-}
-registerCoreComponents2("");
 
 // node_modules/@firebase/auth/dist/esm/index-36fcbc82.js
 function _prodErrorMap() {
@@ -4642,12 +2127,12 @@ var prodErrorMap = _prodErrorMap;
 var _DEFAULT_AUTH_ERROR_FACTORY = new ErrorFactory2("auth", "Firebase", _prodErrorMap());
 var logClient = new Logger2("@firebase/auth");
 function _logWarn(msg, ...args) {
-  if (logClient.logLevel <= LogLevel3.WARN) {
+  if (logClient.logLevel <= LogLevel2.WARN) {
     logClient.warn(`Auth (${SDK_VERSION2}): ${msg}`, ...args);
   }
 }
 function _logError(msg, ...args) {
-  if (logClient.logLevel <= LogLevel3.ERROR) {
+  if (logClient.logLevel <= LogLevel2.ERROR) {
     logClient.error(`Auth (${SDK_VERSION2}): ${msg}`, ...args);
   }
 }
@@ -5940,9 +3425,9 @@ var PersistenceUserManager = class _PersistenceUserManager {
     this.persistence = persistence;
     this.auth = auth;
     this.userKey = userKey;
-    const { config, name: name7 } = this.auth;
-    this.fullUserKey = _persistenceKeyName(this.userKey, config.apiKey, name7);
-    this.fullPersistenceKey = _persistenceKeyName("persistence", config.apiKey, name7);
+    const { config, name: name5 } = this.auth;
+    this.fullUserKey = _persistenceKeyName(this.userKey, config.apiKey, name5);
+    this.fullPersistenceKey = _persistenceKeyName("persistence", config.apiKey, name5);
     this.boundEventHandler = auth._onStorageEvent.bind(auth);
     this.persistence._addListener(this.fullUserKey, this.boundEventHandler);
   }
@@ -8240,8 +5725,8 @@ var BrowserLocalPersistence = class extends BrowserPersistenceClass {
 };
 BrowserLocalPersistence.type = "LOCAL";
 var POLLING_INTERVAL_MS = 1e3;
-function getDocumentCookie(name7) {
-  const escapedName = name7.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+function getDocumentCookie(name5) {
+  const escapedName = name5.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
   const matcher = RegExp(`${escapedName}=([^;]+)`);
   return document.cookie.match(matcher)?.[1] ?? null;
 }
@@ -8284,12 +5769,12 @@ var CookiePersistence = class {
     if (!this._isAvailable()) {
       return null;
     }
-    const name7 = getCookieName(key);
+    const name5 = getCookieName(key);
     if (window.cookieStore) {
-      const cookie = await window.cookieStore.get(name7);
+      const cookie = await window.cookieStore.get(name5);
       return cookie?.value;
     }
-    return getDocumentCookie(name7);
+    return getDocumentCookie(name5);
   }
   // Log out by overriding the idToken with a sentinel value of ""
   async _remove(key) {
@@ -8300,8 +5785,8 @@ var CookiePersistence = class {
     if (!existingValue) {
       return;
     }
-    const name7 = getCookieName(key);
-    document.cookie = `${name7}=;Max-Age=34560000;Partitioned;Secure;SameSite=Strict;Path=/;Priority=High`;
+    const name5 = getCookieName(key);
+    document.cookie = `${name5}=;Max-Age=34560000;Partitioned;Secure;SameSite=Strict;Path=/;Priority=High`;
     await fetch(`/__cookies__`, { method: "DELETE" }).catch(() => void 0);
   }
   // Listen for cookie changes, both cookieStore and fallback to polling document.cookie
@@ -8309,14 +5794,14 @@ var CookiePersistence = class {
     if (!this._isAvailable()) {
       return;
     }
-    const name7 = getCookieName(key);
+    const name5 = getCookieName(key);
     if (window.cookieStore) {
       const cb = ((event) => {
-        const changedCookie = event.changed.find((change) => change.name === name7);
+        const changedCookie = event.changed.find((change) => change.name === name5);
         if (changedCookie) {
           listener(changedCookie.value);
         }
-        const deletedCookie = event.deleted.find((change) => change.name === name7);
+        const deletedCookie = event.deleted.find((change) => change.name === name5);
         if (deletedCookie) {
           listener(null);
         }
@@ -8325,9 +5810,9 @@ var CookiePersistence = class {
       this.listenerUnsubscribes.set(listener, unsubscribe2);
       return window.cookieStore.addEventListener("change", cb);
     }
-    let lastValue = getDocumentCookie(name7);
+    let lastValue = getDocumentCookie(name5);
     const interval = setInterval(() => {
-      const currentValue = getDocumentCookie(name7);
+      const currentValue = getDocumentCookie(name5);
       if (currentValue !== lastValue) {
         listener(currentValue);
         lastValue = currentValue;
@@ -8598,8 +6083,8 @@ function _getServiceWorkerController() {
 function _getWorkerGlobalScope() {
   return _isWorker() ? self : null;
 }
-var DB_NAME4 = "firebaseLocalStorageDb";
-var DB_VERSION4 = 1;
+var DB_NAME3 = "firebaseLocalStorageDb";
+var DB_VERSION3 = 1;
 var DB_OBJECTSTORE_NAME = "firebaseLocalStorage";
 var DB_DATA_KEYPATH = "fbase_key";
 var DBPromise = class {
@@ -8621,11 +6106,11 @@ function getObjectStore(db, isReadWrite) {
   return db.transaction([DB_OBJECTSTORE_NAME], isReadWrite ? "readwrite" : "readonly").objectStore(DB_OBJECTSTORE_NAME);
 }
 function _deleteDatabase() {
-  const request = indexedDB.deleteDatabase(DB_NAME4);
+  const request = indexedDB.deleteDatabase(DB_NAME3);
   return new DBPromise(request).toPromise();
 }
 function _openDatabase() {
-  const request = indexedDB.open(DB_NAME4, DB_VERSION4);
+  const request = indexedDB.open(DB_NAME3, DB_VERSION3);
   return new Promise((resolve, reject) => {
     request.addEventListener("error", () => {
       reject(request.error);
@@ -9674,8 +7159,8 @@ var TotpSecret = class _TotpSecret {
 function _isEmptyString(input) {
   return typeof input === "undefined" || input?.length === 0;
 }
-var name5 = "@firebase/auth";
-var version5 = "1.12.0";
+var name3 = "@firebase/auth";
+var version3 = "1.12.0";
 var AuthInterop = class {
   constructor(auth) {
     this.auth = auth;
@@ -9795,8 +7280,8 @@ function registerAuth(clientPlatform) {
     "EXPLICIT"
     /* InstantiationMode.EXPLICIT */
   ));
-  registerVersion3(name5, version5, getVersionForPlatform(clientPlatform));
-  registerVersion3(name5, version5, "esm2020");
+  registerVersion2(name3, version3, getVersionForPlatform(clientPlatform));
+  registerVersion2(name3, version3, "esm2020");
 }
 var DEFAULT_ID_TOKEN_MAX_AGE = 5 * 60;
 var authIdTokenMaxAge = getExperimentalSetting2("authIdTokenMaxAge") || DEFAULT_ID_TOKEN_MAX_AGE;
@@ -11174,9 +8659,9 @@ var PersistenceUserManager2 = class _PersistenceUserManager {
     this.persistence = persistence;
     this.auth = auth;
     this.userKey = userKey;
-    const { config, name: name7 } = this.auth;
-    this.fullUserKey = _persistenceKeyName2(this.userKey, config.apiKey, name7);
-    this.fullPersistenceKey = _persistenceKeyName2("persistence", config.apiKey, name7);
+    const { config, name: name5 } = this.auth;
+    this.fullUserKey = _persistenceKeyName2(this.userKey, config.apiKey, name5);
+    this.fullPersistenceKey = _persistenceKeyName2("persistence", config.apiKey, name5);
     this.boundEventHandler = auth._onStorageEvent.bind(auth);
     this.persistence._addListener(this.fullUserKey, this.boundEventHandler);
   }
@@ -14290,9 +11775,9 @@ var BrowserLocalPersistence2 = class extends BrowserPersistenceClass2 {
 BrowserLocalPersistence2.type = "LOCAL";
 var browserLocalPersistence2 = BrowserLocalPersistence2;
 var POLLING_INTERVAL_MS2 = 1e3;
-function getDocumentCookie2(name7) {
+function getDocumentCookie2(name5) {
   var _a, _b;
-  const escapedName = name7.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+  const escapedName = name5.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
   const matcher = RegExp(`${escapedName}=([^;]+)`);
   return (_b = (_a = document.cookie.match(matcher)) === null || _a === void 0 ? void 0 : _a[1]) !== null && _b !== void 0 ? _b : null;
 }
@@ -14336,12 +11821,12 @@ var CookiePersistence2 = class {
     if (!this._isAvailable()) {
       return null;
     }
-    const name7 = getCookieName2(key);
+    const name5 = getCookieName2(key);
     if (window.cookieStore) {
-      const cookie = await window.cookieStore.get(name7);
+      const cookie = await window.cookieStore.get(name5);
       return cookie === null || cookie === void 0 ? void 0 : cookie.value;
     }
-    return getDocumentCookie2(name7);
+    return getDocumentCookie2(name5);
   }
   // Log out by overriding the idToken with a sentinel value of ""
   async _remove(key) {
@@ -14352,8 +11837,8 @@ var CookiePersistence2 = class {
     if (!existingValue) {
       return;
     }
-    const name7 = getCookieName2(key);
-    document.cookie = `${name7}=;Max-Age=34560000;Partitioned;Secure;SameSite=Strict;Path=/;Priority=High`;
+    const name5 = getCookieName2(key);
+    document.cookie = `${name5}=;Max-Age=34560000;Partitioned;Secure;SameSite=Strict;Path=/;Priority=High`;
     await fetch(`/__cookies__`, { method: "DELETE" }).catch(() => void 0);
   }
   // Listen for cookie changes, both cookieStore and fallback to polling document.cookie
@@ -14361,14 +11846,14 @@ var CookiePersistence2 = class {
     if (!this._isAvailable()) {
       return;
     }
-    const name7 = getCookieName2(key);
+    const name5 = getCookieName2(key);
     if (window.cookieStore) {
       const cb = ((event) => {
-        const changedCookie = event.changed.find((change) => change.name === name7);
+        const changedCookie = event.changed.find((change) => change.name === name5);
         if (changedCookie) {
           listener(changedCookie.value);
         }
-        const deletedCookie = event.deleted.find((change) => change.name === name7);
+        const deletedCookie = event.deleted.find((change) => change.name === name5);
         if (deletedCookie) {
           listener(null);
         }
@@ -14377,9 +11862,9 @@ var CookiePersistence2 = class {
       this.listenerUnsubscribes.set(listener, unsubscribe2);
       return window.cookieStore.addEventListener("change", cb);
     }
-    let lastValue = getDocumentCookie2(name7);
+    let lastValue = getDocumentCookie2(name5);
     const interval = setInterval(() => {
-      const currentValue = getDocumentCookie2(name7);
+      const currentValue = getDocumentCookie2(name5);
       if (currentValue !== lastValue) {
         listener(currentValue);
         lastValue = currentValue;
@@ -14655,8 +12140,8 @@ function _getServiceWorkerController2() {
 function _getWorkerGlobalScope2() {
   return _isWorker2() ? self : null;
 }
-var DB_NAME5 = "firebaseLocalStorageDb";
-var DB_VERSION5 = 1;
+var DB_NAME4 = "firebaseLocalStorageDb";
+var DB_VERSION4 = 1;
 var DB_OBJECTSTORE_NAME2 = "firebaseLocalStorage";
 var DB_DATA_KEYPATH2 = "fbase_key";
 var DBPromise2 = class {
@@ -14678,11 +12163,11 @@ function getObjectStore2(db, isReadWrite) {
   return db.transaction([DB_OBJECTSTORE_NAME2], isReadWrite ? "readwrite" : "readonly").objectStore(DB_OBJECTSTORE_NAME2);
 }
 function _deleteDatabase2() {
-  const request = indexedDB.deleteDatabase(DB_NAME5);
+  const request = indexedDB.deleteDatabase(DB_NAME4);
   return new DBPromise2(request).toPromise();
 }
 function _openDatabase2() {
-  const request = indexedDB.open(DB_NAME5, DB_VERSION5);
+  const request = indexedDB.open(DB_NAME4, DB_VERSION4);
   return new Promise((resolve, reject) => {
     request.addEventListener("error", () => {
       reject(request.error);
@@ -16067,7 +13552,7 @@ var AuthPopup = class {
     }
   }
 };
-function _open(auth, url, name7, width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT) {
+function _open(auth, url, name5, width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT) {
   const top = Math.max((window.screen.availHeight - height) / 2, 0).toString();
   const left = Math.max((window.screen.availWidth - width) / 2, 0).toString();
   let target = "";
@@ -16078,8 +13563,8 @@ function _open(auth, url, name7, width = DEFAULT_WIDTH, height = DEFAULT_HEIGHT)
     left
   });
   const ua = getUA().toLowerCase();
-  if (name7) {
-    target = _isChromeIOS2(ua) ? TARGET_BLANK : name7;
+  if (name5) {
+    target = _isChromeIOS2(ua) ? TARGET_BLANK : name5;
   }
   if (_isFirefox2(ua)) {
     url = url || FIREFOX_EMPTY_URL;
@@ -16469,8 +13954,8 @@ var TotpSecret2 = class _TotpSecret {
 function _isEmptyString2(input) {
   return typeof input === "undefined" || (input === null || input === void 0 ? void 0 : input.length) === 0;
 }
-var name6 = "@firebase/auth";
-var version6 = "1.10.8";
+var name4 = "@firebase/auth";
+var version4 = "1.10.8";
 var AuthInterop2 = class {
   constructor(auth) {
     this.auth = auth;
@@ -16591,8 +14076,8 @@ function registerAuth2(clientPlatform) {
     "EXPLICIT"
     /* InstantiationMode.EXPLICIT */
   ));
-  registerVersion(name6, version6, getVersionForPlatform2(clientPlatform));
-  registerVersion(name6, version6, "esm2017");
+  registerVersion(name4, version4, getVersionForPlatform2(clientPlatform));
+  registerVersion(name4, version4, "esm2017");
 }
 var DEFAULT_ID_TOKEN_MAX_AGE2 = 5 * 60;
 var authIdTokenMaxAge2 = getExperimentalSetting("authIdTokenMaxAge") || DEFAULT_ID_TOKEN_MAX_AGE2;
@@ -16704,7 +14189,7 @@ var DEFAULT_AUTH_INSTANCE_PROVIDER = {
 };
 var AuthModule = class _AuthModule {
   constructor() {
-    registerVersion("angularfire", VERSION2.full, "auth");
+    registerVersion("angularfire", VERSION.full, "auth");
   }
   static ɵfac = function AuthModule_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AuthModule)();
@@ -19306,19 +16791,19 @@ function __PRIVATE_getLogLevel() {
   return D.logLevel;
 }
 function __PRIVATE_logDebug(e, ...t) {
-  if (D.logLevel <= LogLevel3.DEBUG) {
+  if (D.logLevel <= LogLevel2.DEBUG) {
     const n = t.map(__PRIVATE_argToString);
     D.debug(`Firestore (${S}): ${e}`, ...n);
   }
 }
 function __PRIVATE_logError(e, ...t) {
-  if (D.logLevel <= LogLevel3.ERROR) {
+  if (D.logLevel <= LogLevel2.ERROR) {
     const n = t.map(__PRIVATE_argToString);
     D.error(`Firestore (${S}): ${e}`, ...n);
   }
 }
 function __PRIVATE_logWarn(e, ...t) {
-  if (D.logLevel <= LogLevel3.WARN) {
+  if (D.logLevel <= LogLevel2.WARN) {
     const n = t.map(__PRIVATE_argToString);
     D.warn(`Firestore (${S}): ${e}`, ...n);
   }
@@ -23620,7 +21105,7 @@ var __PRIVATE_LruGarbageCollectorImpl = class {
       // Cap at the configured max
       (t2 > this.params.maximumSequenceNumbersToCollect ? (__PRIVATE_logDebug("LruGarbageCollector", `Capping sequence numbers to collect down to the maximum of ${this.params.maximumSequenceNumbersToCollect} from ${t2}`), r = this.params.maximumSequenceNumbersToCollect) : r = t2, s = Date.now(), this.nthSequenceNumber(e, r))
     ))).next(((r2) => (n = r2, o = Date.now(), this.removeTargets(e, n, t)))).next(((t2) => (i = t2, _ = Date.now(), this.removeOrphanedDocuments(e, n)))).next(((e2) => {
-      if (a = Date.now(), __PRIVATE_getLogLevel() <= LogLevel3.DEBUG) {
+      if (a = Date.now(), __PRIVATE_getLogLevel() <= LogLevel2.DEBUG) {
         __PRIVATE_logDebug("LruGarbageCollector", `LRU Garbage Collection
 	Counted targets in ${s - u}ms
 	Determined least recently used ${r} in ` + (o - s) + `ms
@@ -24635,7 +22120,7 @@ var __PRIVATE_QueryEngine = class {
     })).next((() => i.result));
   }
   ws(e, t, n, r) {
-    return n.documentReadCount < this.Vs ? (__PRIVATE_getLogLevel() <= LogLevel3.DEBUG && __PRIVATE_logDebug("QueryEngine", "SDK will not create cache indexes for query:", __PRIVATE_stringifyQuery(t), "since it only creates cache indexes for collection contains", "more than or equal to", this.Vs, "documents"), PersistencePromise.resolve()) : (__PRIVATE_getLogLevel() <= LogLevel3.DEBUG && __PRIVATE_logDebug("QueryEngine", "Query:", __PRIVATE_stringifyQuery(t), "scans", n.documentReadCount, "local documents and returns", r, "documents as results."), n.documentReadCount > this.ds * r ? (__PRIVATE_getLogLevel() <= LogLevel3.DEBUG && __PRIVATE_logDebug("QueryEngine", "The SDK decides to create cache indexes for query:", __PRIVATE_stringifyQuery(t), "as using cache indexes may help improve performance."), this.indexManager.createTargetIndexes(e, __PRIVATE_queryToTarget(t))) : PersistencePromise.resolve());
+    return n.documentReadCount < this.Vs ? (__PRIVATE_getLogLevel() <= LogLevel2.DEBUG && __PRIVATE_logDebug("QueryEngine", "SDK will not create cache indexes for query:", __PRIVATE_stringifyQuery(t), "since it only creates cache indexes for collection contains", "more than or equal to", this.Vs, "documents"), PersistencePromise.resolve()) : (__PRIVATE_getLogLevel() <= LogLevel2.DEBUG && __PRIVATE_logDebug("QueryEngine", "Query:", __PRIVATE_stringifyQuery(t), "scans", n.documentReadCount, "local documents and returns", r, "documents as results."), n.documentReadCount > this.ds * r ? (__PRIVATE_getLogLevel() <= LogLevel2.DEBUG && __PRIVATE_logDebug("QueryEngine", "The SDK decides to create cache indexes for query:", __PRIVATE_stringifyQuery(t), "as using cache indexes may help improve performance."), this.indexManager.createTargetIndexes(e, __PRIVATE_queryToTarget(t))) : PersistencePromise.resolve());
   }
   /**
    * Performs an indexed query that evaluates the query based on a collection's
@@ -24677,7 +22162,7 @@ var __PRIVATE_QueryEngine = class {
   ps(e, t, n, r) {
     return __PRIVATE_queryMatchesAllDocuments(t) || r.isEqual(SnapshotVersion.min()) ? PersistencePromise.resolve(null) : this.fs.getDocuments(e, n).next(((i) => {
       const s = this.bs(t, i);
-      return this.Ss(t, s, n, r) ? PersistencePromise.resolve(null) : (__PRIVATE_getLogLevel() <= LogLevel3.DEBUG && __PRIVATE_logDebug("QueryEngine", "Re-using previous result from %s to execute query: %s", r.toString(), __PRIVATE_stringifyQuery(t)), this.Ds(e, s, t, __PRIVATE_newIndexOffsetSuccessorFromReadTime(r, B)).next(((e2) => e2)));
+      return this.Ss(t, s, n, r) ? PersistencePromise.resolve(null) : (__PRIVATE_getLogLevel() <= LogLevel2.DEBUG && __PRIVATE_logDebug("QueryEngine", "Re-using previous result from %s to execute query: %s", r.toString(), __PRIVATE_stringifyQuery(t)), this.Ds(e, s, t, __PRIVATE_newIndexOffsetSuccessorFromReadTime(r, B)).next(((e2) => e2)));
     }));
   }
   /** Applies the query filter and sorting to the provided documents.  */
@@ -24708,7 +22193,7 @@ var __PRIVATE_QueryEngine = class {
     return !!i && (i.hasPendingWrites || i.version.compareTo(r) > 0);
   }
   ys(e, t, n) {
-    return __PRIVATE_getLogLevel() <= LogLevel3.DEBUG && __PRIVATE_logDebug("QueryEngine", "Using full collection scan to execute query:", __PRIVATE_stringifyQuery(t)), this.fs.getDocumentsMatchingQuery(e, t, IndexOffset.min(), n);
+    return __PRIVATE_getLogLevel() <= LogLevel2.DEBUG && __PRIVATE_logDebug("QueryEngine", "Using full collection scan to execute query:", __PRIVATE_stringifyQuery(t)), this.fs.getDocumentsMatchingQuery(e, t, IndexOffset.min(), n);
   }
   /**
    * Combines the results from an indexed execution with the remaining documents
@@ -28370,8 +25855,8 @@ function __PRIVATE_convertToDocSnapshot(t, e, n) {
     return n = __spreadValues({
       useFetchStreams: l
     }, n), s._setSettings(n), s;
-  }), "PUBLIC").setMultipleInstances(true)), registerVersion3(Ut, Ht2, u), // BUILD_TARGET will be replaced by values like esm, cjs, etc during the compilation
-  registerVersion3(Ut, Ht2, "esm2020");
+  }), "PUBLIC").setMultipleInstances(true)), registerVersion2(Ut, Ht2, u), // BUILD_TARGET will be replaced by values like esm, cjs, etc during the compilation
+  registerVersion2(Ut, Ht2, "esm2020");
 })();
 
 // node_modules/rxfire/firestore/index.esm.js
@@ -31168,7 +28653,7 @@ var O2 = new Logger("@firebase/firestore");
 function __PRIVATE_getLogLevel2() {
   return O2.logLevel;
 }
-function setLogLevel6(e) {
+function setLogLevel3(e) {
   O2.setLogLevel(e);
 }
 function __PRIVATE_logDebug2(e, ...t) {
@@ -47111,7 +44596,7 @@ var DEFAULT_FIRESTORE_INSTANCE_PROVIDER = {
 };
 var FirestoreModule = class _FirestoreModule {
   constructor() {
-    registerVersion("angularfire", VERSION2.full, "fst");
+    registerVersion("angularfire", VERSION.full, "fst");
   }
   static ɵfac = function FirestoreModule_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _FirestoreModule)();
@@ -47132,7 +44617,7 @@ var FirestoreModule = class _FirestoreModule {
   }], () => [], null);
 })();
 function provideFirestore(fn, ...deps) {
-  registerVersion("angularfire", VERSION2.full, "fst");
+  registerVersion("angularfire", VERSION.full, "fst");
   return makeEnvironmentProviders([DEFAULT_FIRESTORE_INSTANCE_PROVIDER, FIRESTORE_INSTANCES_PROVIDER, {
     provide: PROVIDED_FIRESTORE_INSTANCES,
     useFactory: firestoreInstanceFactory(fn),
@@ -47207,7 +44692,7 @@ var refEqual3 = ɵzoneWrap(refEqual2, true, 2);
 var runTransaction2 = ɵzoneWrap(runTransaction, true);
 var setDoc2 = ɵzoneWrap(setDoc, true, 2);
 var setIndexConfiguration2 = ɵzoneWrap(setIndexConfiguration, true);
-var setLogLevel7 = ɵzoneWrap(setLogLevel6, true);
+var setLogLevel4 = ɵzoneWrap(setLogLevel3, true);
 var snapshotEqual2 = ɵzoneWrap(snapshotEqual, true, 2);
 var startAfter2 = ɵzoneWrap(startAfter, true, 2);
 var startAt2 = ɵzoneWrap(startAt, true, 2);
@@ -47340,7 +44825,7 @@ export {
   serverTimestamp2 as serverTimestamp,
   setDoc2 as setDoc,
   setIndexConfiguration2 as setIndexConfiguration,
-  setLogLevel7 as setLogLevel,
+  setLogLevel4 as setLogLevel,
   snapToData2 as snapToData,
   snapshotEqual2 as snapshotEqual,
   sortedChanges2 as sortedChanges,

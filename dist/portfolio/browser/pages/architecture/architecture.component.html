@@ -1,68 +1,56 @@
-<section class="footer-layout">
-  <article 
-    class="footer-card footer-card--about footer-card--glass-holographic" 
-    [@cardEnter] 
+<section class="footer-layout" aria-labelledby="architecture-title">
+  <article
+    class="footer-card footer-card--about footer-card--glass-holographic"
+    [@cardEnter]
     role="article"
   >
     <header class="footer-header">
       <span class="about-pulse">●</span>
-        INFRASTRUCTURE_ARCHITECTURE.log
+        SYSTEM_ARCHITECTURE.log
+      <span class="status"> | STRUCTURED </span>
     </header>
     <div class="footer-body">
       <div class="footer-block">
-        <div class="infra-diagram">
-          <pre><code>
-          
-            ```
-            mermaid
-              graph TD
-              A[DomisDev Frontend] --> B[Firebase Hosting CDN]
-              A --> C[GitHub Actions CI/CD]
-              C --> D[ng build --prod]
-              D --> B
-              E[GitHub API] --> F[Cloud Functions Python]
-              F --> G[Firestore Cache]
-              G --> A
-              H[5 Live Projects] --> B</code>
-
-            ```
-          </pre>  
+        <div class="architecture-core">
+          <div class="core-node">
+            <span class="core-title"> Frontend </span>
+            <span class="core-sub"> - Angular • Vue • Bootstrap </span>
+          </div>
+          <div class="core-layer">
+            <span> Routing </span>
+            <small> Lazy modules • route isolation </small>
+          </div>
+          <div class="core-layer">
+            <span> State & Logic </span>
+            <small> Signals • Pinia • service orchestration </small>
+          </div>
+          <div class="core-layer">
+            <span> Data Flow </span>
+            <small> API → cache → UI hydration </small>
+          </div>
         </div>
       </div>
       <div class="footer-block">
-        <div class="tech-specs-complete">
-          <h4>🔥 Firebase Deployments</h4>
-          <div class="deploy-list">
-            <code>portfolio-23948217-d156e.web.app</code>
-            <code>github-stats-68157678-42e04.web.app</code>
-            <code>drakonik-nexus-75177593-75741.web.app</code>
-            <code>shadow-flip-oh-86570817-f8cc4.web.app</code>
+        <div class="infra-grid">
+          <div class="infra-item">
+            <span class="infra-title"> Build : </span>
+            <small> Optimized production bundles </small>
           </div>
-          <div class="spec-group">
-            <h4>⚡ Performance Metrics</h4>
-            <div class="metrics-list">
-              <div>Portfolio: 98/100 Lighthouse</div>
-              <div>TTI: 1.2s | FCP: 0.8s</div>
-            <div>5 Projects 99.9% Uptime</div>
+          <div class="infra-item">
+            <span class="infra-title"> CI/CD : </span>
+            <small> GitHub Actions automation </small>
           </div>
-        </div>
-      </div>
-    </div>
-    <div class="footer-block">
-      <div class="deploy-commands">
-        <pre><code class="language-bash"># DOMISDEV DEPLOY PIPELINE
-          ng build --configuration production
-          firebase deploy --only hosting:portfolio
-          firebase deploy --only functions:stats-generator
-          GitHub Actions Trigger
-          git push origin main → LIVE</code></pre>
+          <div class="infra-item">
+            <span class="infra-title"> Delivery : </span>
+            <small> Firebase hosting pipeline </small>
+          </div>
         </div>
       </div>
       <footer class="footer-actions">
         <span class="footer-meta executing">
-          Executing: INFRASTRUCTURE_ARCHITECTURE.bin
+          ARCH_FLOW: STABLE.bin
         </span>
       </footer>
-    </div> 
+    </div>
   </article>
 </section>

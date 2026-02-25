@@ -20,19 +20,17 @@ import {
 } from "./chunk-4R7DX4UD.js";
 import {
   ANIMATION_MODULE_TYPE,
+  DOCUMENT,
   Inject,
   Injectable,
   RendererFactory2,
-  ViewEncapsulation,
-  setClassMetadata
-} from "./chunk-OAFCBCNS.js";
-import {
-  DOCUMENT,
   RuntimeError,
+  ViewEncapsulation,
   inject,
+  setClassMetadata,
   ɵɵdefineInjectable,
   ɵɵinject
-} from "./chunk-PX3YWRVP.js";
+} from "./chunk-Z3KONNDO.js";
 import "./chunk-OSECCFIU.js";
 import "./chunk-IONO6HLE.js";
 import "./chunk-PHHPLELC.js";

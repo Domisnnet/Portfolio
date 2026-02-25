@@ -10,28 +10,26 @@ import {
 import {
   BrowserModule,
   DomRendererFactory2
-} from "./chunk-5ERKE3PH.js";
-import "./chunk-HWRK5ZOF.js";
-import "./chunk-2FIISPPK.js";
+} from "./chunk-I6BSBPP7.js";
+import "./chunk-CFXCRD4F.js";
+import "./chunk-UJRQM7SR.js";
 import {
   ANIMATION_MODULE_TYPE,
+  DOCUMENT,
   Inject,
   Injectable,
   NgModule,
-  RendererFactory2,
-  performanceMarkFeature,
-  setClassMetadata,
-  ɵɵdefineNgModule
-} from "./chunk-OAFCBCNS.js";
-import {
-  DOCUMENT,
   NgZone,
+  RendererFactory2,
   RuntimeError,
   inject,
+  performanceMarkFeature,
+  setClassMetadata,
   ɵɵdefineInjectable,
   ɵɵdefineInjector,
+  ɵɵdefineNgModule,
   ɵɵinject
-} from "./chunk-PX3YWRVP.js";
+} from "./chunk-Z3KONNDO.js";
 import "./chunk-OSECCFIU.js";
 import "./chunk-IONO6HLE.js";
 import {

@@ -1,1 +1,0 @@
-import{c as r,d as a,f as t,g as e}from"./chunk-MLMGL4QO.js";var i=r("cardEnter",[e(":enter",[t({opacity:0,transform:"translateY(40px) scale(0.95)"}),a("700ms cubic-bezier(0.34, 1.56, 0.64, 1)",t({opacity:1,transform:"translateY(0) scale(1)"}))])]);export{i as a};

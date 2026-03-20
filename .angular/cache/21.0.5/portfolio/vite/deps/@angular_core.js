@@ -500,8 +500,8 @@ import {
   ɵɵviewQuery,
   ɵɵviewQuerySignal
 } from "./chunk-Z3KONNDO.js";
-import "./chunk-IONO6HLE.js";
 import "./chunk-OSECCFIU.js";
+import "./chunk-IONO6HLE.js";
 import "./chunk-PHHPLELC.js";
 export {
   ANIMATION_MODULE_TYPE,
